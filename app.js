@@ -1,5 +1,26 @@
 let currentGeneratedCode = "";
 
+// دالة العد التنازلي الجديدة
+function startCooldown(seconds) {
+    const btn = document.getElementById('generateBtn');
+    const loader = document.getElementById('loader');
+    let counter = seconds;
+
+    btn.disabled = true;
+    loader.classList.add('hidden'); // إخفاء اللودر لأننا بنعد تنازلي مش بنولد كود
+
+    const interval = setInterval(() => {
+        btn.querySelector('span').innerText = `انتظر ${counter} ثانية للراحة... ⏳`;
+        counter--;
+
+        if (counter < 0) {
+            clearInterval(interval);
+            btn.disabled = false;
+            btn.querySelector('span').innerText = "توليد الموقع الآن ✨";
+        }
+    }, 1000);
+}
+
 async function generateSite() {
     const promptInput = document.getElementById('promptInput');
     const btn = document.getElementById('generateBtn');
@@ -28,21 +49,23 @@ async function generateSite() {
             body: JSON.stringify({ prompt: promptValue })
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || "خطأ في السيرفر");
+        const data = await response.json();
+
+        // --- التعديل هنا لاكتشاف زحمة جوجل ---
+        if (response.status === 429 || (data.error && data.error.toLowerCase().includes('quota'))) {
+            startCooldown(15); // هينتظر 15 ثانية لو المحاولات خلصت
+            return; // نوقف الدالة هنا عشان ميروحش للـ finally يفتح الزرار
         }
 
-        const data = await response.json();
-        
+        if (!response.ok) {
+            throw new Error(data.error || "خطأ في السيرفر");
+        }
+
         if (data.code) {
             currentGeneratedCode = data.code; 
             iframe.srcdoc = data.code; 
 
-            // 1. تخزين الكود في المتصفح ليعمل حتى بعد إعادة التحميل
             localStorage.setItem('nova_preview_code', data.code);
-            
-            // 2. تثبيت عنوان الصفحة على NovaBuilder 🚀 كما طلبت
             localStorage.setItem('nova_preview_title', "NovaBuilder 🚀");
 
             if (openNewTabBtn) {
@@ -56,13 +79,16 @@ async function generateSite() {
         console.error("Error details:", e);
         alert("فيه مشكلة حصلت: " + e.message);
     } finally {
-        btn.disabled = false;
-        loader.classList.add('hidden');
-        btn.querySelector('span').innerText = "توليد الموقع الآن ✨";
+        // نرجع الزرار لأصله "فقط" لو مفيش عد تنازلي شغال
+        if (!btn.querySelector('span').innerText.includes('انتظر')) {
+            btn.disabled = false;
+            loader.classList.add('hidden');
+            btn.querySelector('span').innerText = "توليد الموقع الآن ✨";
+        }
     }
 }
 
-// فتح صفحة المعاينة (تأكد من وجود ملف preview.html في مشروعك)
+// فتح صفحة المعاينة
 const openBtn = document.getElementById('openNewTabBtn');
 if (openBtn) {
     openBtn.addEventListener('click', () => {
