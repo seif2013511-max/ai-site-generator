@@ -1,25 +1,5 @@
+// متغير عالمي لتخزين الكود المولد لفتحه في نافذة جديدة
 let currentGeneratedCode = "";
-
-// دالة العد التنازلي الجديدة
-function startCooldown(seconds) {
-    const btn = document.getElementById('generateBtn');
-    const loader = document.getElementById('loader');
-    let counter = seconds;
-
-    btn.disabled = true;
-    loader.classList.add('hidden'); // إخفاء اللودر لأننا بنعد تنازلي مش بنولد كود
-
-    const interval = setInterval(() => {
-        btn.querySelector('span').innerText = `انتظر ${counter} ثانية للراحة... ⏳`;
-        counter--;
-
-        if (counter < 0) {
-            clearInterval(interval);
-            btn.disabled = false;
-            btn.querySelector('span').innerText = "توليد الموقع الآن ✨";
-        }
-    }, 1000);
-}
 
 async function generateSite() {
     const promptInput = document.getElementById('promptInput');
@@ -35,42 +15,35 @@ async function generateSite() {
         return;
     }
 
-    // تجهيز الواجهة لبدء التوليد
+    // 1. تجهيز الواجهة لبدء التوليد
     btn.disabled = true;
-    loader.classList.remove('hidden');
+    loader.classList.remove('hidden'); 
     btn.querySelector('span').innerText = "جاري البناء... 🏗️";
-    
-    if (openNewTabBtn) openNewTabBtn.classList.add('hidden');
+    // إخفاء زر ملء الشاشة عند بدء توليد جديد
+    openNewTabBtn.classList.add('hidden');
 
     try {
+        // 2. طلب الكود من السيرفر
         const response = await fetch('/api/generate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ prompt: promptValue })
         });
 
-        const data = await response.json();
-
-        // --- التعديل هنا لاكتشاف زحمة جوجل ---
-        if (response.status === 429 || (data.error && data.error.toLowerCase().includes('quota'))) {
-            startCooldown(15); // هينتظر 15 ثانية لو المحاولات خلصت
-            return; // نوقف الدالة هنا عشان ميروحش للـ finally يفتح الزرار
-        }
-
         if (!response.ok) {
-            throw new Error(data.error || "خطأ في السيرفر");
+            const errorData = await response.json();
+            throw new Error(errorData.error || "خطأ في السيرفر");
         }
 
+        const data = await response.json();
+        
         if (data.code) {
-            currentGeneratedCode = data.code; 
-            iframe.srcdoc = data.code; 
+            // 3. تخزين الكود وعرضه في المعاينة
+            currentGeneratedCode = data.code;
+            iframe.srcdoc = data.code;
 
-            localStorage.setItem('nova_preview_code', data.code);
-            localStorage.setItem('nova_preview_title', "NovaBuilder 🚀");
-
-            if (openNewTabBtn) {
-                openNewTabBtn.classList.remove('hidden');
-            }
+            // 4. إظهار زر "مشاهدة الموقع بملء الشاشة"
+            openNewTabBtn.classList.remove('hidden');
         } else {
             throw new Error("لم يتم استلام كود من الذكاء الاصطناعي");
         }
@@ -79,22 +52,21 @@ async function generateSite() {
         console.error("Error details:", e);
         alert("فيه مشكلة حصلت: " + e.message);
     } finally {
-        // نرجع الزرار لأصله "فقط" لو مفيش عد تنازلي شغال
-        if (!btn.querySelector('span').innerText.includes('انتظر')) {
-            btn.disabled = false;
-            loader.classList.add('hidden');
-            btn.querySelector('span').innerText = "توليد الموقع الآن ✨";
-        }
+        // 5. إعادة الزرار لحالته الطبيعية
+        btn.disabled = false;
+        loader.classList.add('hidden'); 
+        btn.querySelector('span').innerText = "توليد الموقع الآن ✨";
     }
 }
 
-// فتح صفحة المعاينة
-const openBtn = document.getElementById('openNewTabBtn');
-if (openBtn) {
-    openBtn.addEventListener('click', () => {
-        window.open('/preview.html', '_blank');
-    });
-}
+// برمجة زر "مشاهدة الموقع بملء الشاشة" لفتح نافذة جديدة
+document.getElementById('openNewTabBtn').addEventListener('click', () => {
+    if (currentGeneratedCode) {
+        const newWindow = window.open();
+        newWindow.document.write(currentGeneratedCode);
+        newWindow.document.close();
+    }
+});
 
-// ربط وظيفة التوليد بالزر الأساسي
+// ربط وظيفة التوليد بالزرار الأساسي
 document.getElementById('generateBtn').addEventListener('click', generateSite);
