@@ -2,51 +2,28 @@
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>معاينة NovaBuilder 🚀</title>
     <style>
-        body, html { 
-            margin: 0; 
-            padding: 0; 
-            height: 100%; 
-            overflow: hidden; 
-            background: #0f172a; 
-        }
-        iframe { 
-            width: 100%; 
-            height: 100%; 
-            border: none; 
-            background: white; 
-        }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #0f172a; }
+        iframe { width: 100%; height: 100%; border: none; background: white; }
     </style>
 </head>
 <body>
     <iframe id="output"></iframe>
-
     <script>
         function updateContent() {
-            // 1. أولاً بنشوف هل فيه كود مبعوث في الـ sessionStorage الخاص بالنافذة دي؟
-            const sessionCode = sessionStorage.getItem('current_page_code');
-            const title = localStorage.getItem('nova_preview_title');
-            
-            if (sessionCode) {
-                document.getElementById('output').srcdoc = sessionCode;
-                if (title) document.title = title + " | NovaBuilder 🚀";
-            } else {
-                // 2. لو مفيش (أول مرة تفتح)، بنجيب من الـ localStorage ونخزنه فوراً في النافذة دي
-                const localCode = localStorage.getItem('nova_preview_code');
-                if (localCode) {
-                    document.getElementById('output').srcdoc = localCode;
-                    // بنحفظ نسخة "خاصة" بالتاب ده بس عشان ميتغيرش تاني
-                    sessionStorage.setItem('current_page_code', localCode);
-                }
+            const code = localStorage.getItem('nova_preview_code');
+            if (code) {
+                document.getElementById('output').srcdoc = code;
             }
         }
-
+        // التحميل عند فتح الصفحة
         updateContent();
         
-        // عطلنا الـ storage listener هنا عشان الصفحة متحدثش نفسها لو عملت موقع جديد
-        // وبكده كل تاب يفضل محتفظ بالموقع اللي اتفتح فيه
+        // تحديث تلقائي لو ولدت كود جديد وأنت فاتح الصفحة دي بجانبها
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'nova_preview_code') updateContent();
+        });
     </script>
 </body>
 </html>
