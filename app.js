@@ -1,5 +1,5 @@
 let currentGeneratedCode = "";
-let isCooldownActive = false; 
+let isCooldownActive = false; // متغير جديد لمنع التداخل
 
 // دالة العد التنازلي المطورة
 function startCooldown(seconds) {
@@ -35,6 +35,12 @@ async function generateSite() {
 
     if (!promptValue || isCooldownActive) return;
 
+    if (!promptValue) {
+        alert("من فضلك اكتب وصف للموقع أولاً!");
+        return;
+    }
+
+    // تجهيز الواجهة لبدء التوليد
     btn.disabled = true;
     loader.classList.remove('hidden');
     btn.querySelector('span').innerText = "جاري البناء... 🏗️";
@@ -50,8 +56,9 @@ async function generateSite() {
 
         const data = await response.json();
 
+        // اكتشاف الزحمة ونفاد المحاولات
         if (response.status === 429 || (data.error && data.error.toLowerCase().includes('quota'))) {
-            startCooldown(30); 
+            startCooldown(30); // 30 ثانية عشان نضمن إن جوجل هديت
             return; 
         }
 
@@ -63,7 +70,6 @@ async function generateSite() {
             currentGeneratedCode = data.code; 
             iframe.srcdoc = data.code; 
 
-            // بنخزن الكود في localStorage عشان preview.html يسحبه أول مرة
             localStorage.setItem('nova_preview_code', data.code);
             localStorage.setItem('nova_preview_title', "NovaBuilder 🚀");
 
@@ -76,8 +82,10 @@ async function generateSite() {
 
     } catch (e) {
         console.error("Error details:", e);
+        // لو الخطأ مش بسبب الزحمة، طلع التنبيه العادي
         if (!isCooldownActive) alert("فيه مشكلة حصلت: " + e.message);
     } finally {
+        // ميرجعش يفتح الزرار لو العداد شغال
         if (!isCooldownActive) {
             btn.disabled = false;
             loader.classList.add('hidden');
@@ -86,19 +94,13 @@ async function generateSite() {
     }
 }
 
-// --- التعديل هنا لضمان استقلالية النوافذ ---
+// فتح صفحة المعاينة
 const openBtn = document.getElementById('openNewTabBtn');
 if (openBtn) {
     openBtn.addEventListener('click', () => {
-        // بنفتح النافذة
-        const newWin = window.open('/preview.html', '_blank');
-        
-        // بمجرد ما النافذة تفتح، بنبعتلها الكود الحالي 
-        // عشان تسجله عندها في الـ Session الخاص بيها هي بس
-        newWin.onload = () => {
-            newWin.sessionStorage.setItem('current_page_code', currentGeneratedCode);
-        };
+        window.open('/preview.html', '_blank');
     });
 }
 
+// ربط وظيفة التوليد بالزر الأساسي
 document.getElementById('generateBtn').addEventListener('click', generateSite);
