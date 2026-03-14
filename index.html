@@ -1,32 +1,49 @@
-async function generateSite() {
-    const prompt = document.getElementById('userPrompt').value.trim();
-    const btn = document.getElementById('genBtn');
-    const iframe = document.getElementById('preview');
-    
-    if (!prompt) return alert("اكتب أي حاجة يا سيف عشان أصممها!");
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مولد المواقع الذكي | سيف GPT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
+        body { font-family: 'Tajawal', sans-serif; }
+        .preview-container { min-height: 500px; transition: all 0.3s ease; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
 
-    btn.disabled = true;
-    btn.innerHTML = "جاري البناء... 🏗️";
+    <div class="container mx-auto px-4 py-10">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-l from-blue-400 to-purple-500">
+                مؤلف المواقع الذكي (Gemini 3 Flash)
+            </h1>
+            <p class="text-gray-400">اكتب وصف موقعك باللغة العربية وسأقوم ببنائه لك فوراً</p>
+        </header>
 
-    try {
-        const response = await fetch('/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: prompt })
-        });
+        <div class="max-w-3xl mx-auto bg-gray-800 p-6 rounded-2xl shadow-2xl border border-gray-700 mb-10">
+            <textarea id="promptInput" 
+                class="w-full bg-gray-900 text-white p-4 rounded-xl border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none h-32 mb-4"
+                placeholder="مثال: صمم لي صفحة شخصية لمصور فوتوغرافي بلمسة عصرية وألوان داكنة..."></textarea>
+            
+            <button id="generateBtn" 
+                class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2">
+                <span>توليد الموقع الآن</span>
+                <div id="loader" class="hidden animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+            </button>
+        </div>
 
-        const data = await response.json();
+        <div class="w-full">
+            <h2 class="text-2xl font-bold mb-4 text-blue-400 flex items-center gap-2">
+                <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+                معاينة الموقع المباشرة:
+            </h2>
+            <div id="previewWrapper" class="bg-white rounded-2xl overflow-hidden shadow-2xl border-4 border-gray-800">
+                <iframe id="previewIframe" class="w-full preview-container" srcdoc="<body style='display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;color:#888;'>المعاينة ستظهر هنا بعد كتابة الوصف...</body>"></iframe>
+            </div>
+        </div>
+    </div>
 
-        if (data.code) {
-            iframe.srcdoc = data.code;
-        } else {
-            alert("السيرفر رد بس مفيش كود!");
-        }
-    } catch (error) {
-        console.error(error);
-        alert("فشل الاتصال.. تأكد إنك ضفت API_KEY في إعدادات Vercel");
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = "توليد الموقع الآن ✨";
-    }
-}
+    <script src="app.js"></script>
+</body>
+</html>
