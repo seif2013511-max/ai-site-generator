@@ -1,8 +1,7 @@
 const axios = require('axios');
 
-// لازم نستخدم module.exports عشان Vercel يتعرف على الوظيفة
 module.exports = async (req, res) => {
-    // إعدادات السماح بالاتصال (CORS)
+    // إعدادات CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -13,29 +12,40 @@ module.exports = async (req, res) => {
 
     try {
         const { prompt } = req.body;
-        const API_KEY = process.env.API_KEY;
+        // تعديل لقراءة المفتاح سواء كان حروف كبيرة أو صغيرة للاحتياط
+        const API_KEY = process.env.API_KEY || process.env.api_key;
 
         if (!API_KEY) {
-            return res.status(500).json({ error: "API Key is missing in Vercel settings" });
+            return res.status(500).json({ error: "المفتاح (API Key) غير موجود في إعدادات Vercel" });
         }
 
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
         
         const response = await axios.post(url, {
-            contents: [{ parts: [{ text: `صمم صفحة ويب كاملة باستخدام HTML و Tailwind CSS بناءً على الوصف التالي: ${prompt}. أخرج الكود فقط بدون أي نصوص أخرى.` }] }]
+            contents: [{ 
+                parts: [{ 
+                    text: `صمم صفحة ويب احترافية كاملة ومستجيبة باستخدام HTML و Tailwind CSS فقط بناءً على: ${prompt}. ابدأ الكود بـ <!DOCTYPE html> وأنهه بـ </html>. لا تكتب أي نصوص شرحية، أريد الكود فقط.` 
+                }] 
+            }]
         });
 
-        if (response.data && response.data.candidates) {
+        if (response.data && response.data.candidates && response.data.candidates[0].content) {
             let code = response.data.candidates[0].content.parts[0].text;
-            // تنظيف الكود من علامات markdown لو وجدت
+            // تنظيف الكود من علامات Markdown بشكل أدق
             code = code.replace(/```html|```/g, "").trim();
-            res.status(200).json({ code: code });
+            return res.status(200).json({ code: code });
         } else {
-            throw new Error("Invalid response from Gemini API");
+            throw new Error("جوجل أرسلت رداً فارغاً، جرب وصفاً آخر");
         }
 
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "حدث خطأ في توليد الكود، تأكد من إعدادات الـ API" });
+        // استخراج رسالة الخطأ الحقيقية من جوجل
+        const errorMessage = err.response?.data?.error?.message || err.message;
+        console.error("Gemini API Error:", errorMessage);
+        
+        res.status(500).json({ 
+            error: `فشل التوليد: ${errorMessage}`,
+            suggestion: "تأكد من أن المفتاح مفعل وأنك لم تتجاوز حد الاستخدام المجاني."
+        });
     }
 };
