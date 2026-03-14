@@ -1,4 +1,4 @@
-// متغير عالمي لتخزين الكود المولد لفتحه في نافذة جديدة
+// متغير لتخزين الكود عشان يفتح في الصفحة الجديدة
 let currentGeneratedCode = "";
 
 async function generateSite() {
@@ -6,6 +6,8 @@ async function generateSite() {
     const btn = document.getElementById('generateBtn');
     const iframe = document.getElementById('previewIframe');
     const loader = document.getElementById('loader');
+    
+    // تأكدنا إن الزرار ده موجود في الـ HTML قبل ما نطلبه
     const openNewTabBtn = document.getElementById('openNewTabBtn');
     
     const promptValue = promptInput.value;
@@ -15,15 +17,15 @@ async function generateSite() {
         return;
     }
 
-    // 1. تجهيز الواجهة لبدء التوليد
+    // تجهيز الواجهة
     btn.disabled = true;
-    loader.classList.remove('hidden'); 
+    loader.classList.remove('hidden');
     btn.querySelector('span').innerText = "جاري البناء... 🏗️";
-    // إخفاء زر ملء الشاشة عند بدء توليد جديد
-    openNewTabBtn.classList.add('hidden');
+    
+    // إخفاء زر المعاينة لو كان ظاهر من محاولة سابقة
+    if (openNewTabBtn) openNewTabBtn.classList.add('hidden');
 
     try {
-        // 2. طلب الكود من السيرفر
         const response = await fetch('/api/generate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -38,12 +40,13 @@ async function generateSite() {
         const data = await response.json();
         
         if (data.code) {
-            // 3. تخزين الكود وعرضه في المعاينة
-            currentGeneratedCode = data.code;
-            iframe.srcdoc = data.code;
+            currentGeneratedCode = data.code; // حفظ الكود
+            iframe.srcdoc = data.code; // عرض في المعاينة
 
-            // 4. إظهار زر "مشاهدة الموقع بملء الشاشة"
-            openNewTabBtn.classList.remove('hidden');
+            // إظهار زر "مشاهدة الموقع بملء الشاشة"
+            if (openNewTabBtn) {
+                openNewTabBtn.classList.remove('hidden');
+            }
         } else {
             throw new Error("لم يتم استلام كود من الذكاء الاصطناعي");
         }
@@ -52,21 +55,21 @@ async function generateSite() {
         console.error("Error details:", e);
         alert("فيه مشكلة حصلت: " + e.message);
     } finally {
-        // 5. إعادة الزرار لحالته الطبيعية
         btn.disabled = false;
-        loader.classList.add('hidden'); 
+        loader.classList.add('hidden');
         btn.querySelector('span').innerText = "توليد الموقع الآن ✨";
     }
 }
 
-// برمجة زر "مشاهدة الموقع بملء الشاشة" لفتح نافذة جديدة
-document.getElementById('openNewTabBtn').addEventListener('click', () => {
-    if (currentGeneratedCode) {
-        const newWindow = window.open();
-        newWindow.document.write(currentGeneratedCode);
-        newWindow.document.close();
-    }
-});
+// برمجة زرار الفتح في صفحة جديدة (Window Open)
+const openBtn = document.getElementById('openNewTabBtn');
+if (openBtn) {
+    openBtn.addEventListener('click', () => {
+        const win = window.open();
+        win.document.write(currentGeneratedCode);
+        win.document.close();
+    });
+}
 
-// ربط وظيفة التوليد بالزرار الأساسي
+// ربط زرار التوليد الأساسي
 document.getElementById('generateBtn').addEventListener('click', generateSite);
