@@ -2,7 +2,7 @@
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <title>معاينة NovaBuilder 🚀</title>
+    <title id="pageTitle">معاينة NovaBuilder 🚀</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #0f172a; }
         iframe { width: 100%; height: 100%; border: none; background: white; }
@@ -13,16 +13,17 @@
     <script>
         function updateContent() {
             const code = localStorage.getItem('nova_preview_code');
+            const title = localStorage.getItem('nova_preview_title');
             if (code) {
                 document.getElementById('output').srcdoc = code;
             }
+            if (title) {
+                document.title = title + " | NovaBuilder";
+            }
         }
-        // التحميل عند فتح الصفحة
         updateContent();
-        
-        // تحديث تلقائي لو ولدت كود جديد وأنت فاتح الصفحة دي بجانبها
         window.addEventListener('storage', (e) => {
-            if (e.key === 'nova_preview_code') updateContent();
+            if (e.key === 'nova_preview_code' || e.key === 'nova_preview_title') updateContent();
         });
     </script>
 </body>
