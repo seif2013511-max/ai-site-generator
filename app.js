@@ -48,25 +48,22 @@ async function generateSite() {
             body: JSON.stringify({ prompt: promptValue })
         });
 
-        // --- التعديل الجوهري هنا ---
-        // بنشيك على حالة الاستجابة "قبل" ما نحاول نحولها لـ JSON
-        if (response.status === 429) {
-            startCooldown(30);
-            return;
-        }
-
         const data = await response.json();
 
-        // لو فيه خطأ داخل الـ JSON نفسه (زي الـ Quota)
-        if (!response.ok || (data.error && data.error.toLowerCase().includes('quota'))) {
+        if (response.status === 429 || (data.error && data.error.toLowerCase().includes('quota'))) {
             startCooldown(30); 
             return; 
+        }
+
+        if (!response.ok) {
+            throw new Error(data.error || "خطأ في السيرفر");
         }
 
         if (data.code) {
             currentGeneratedCode = data.code; 
             iframe.srcdoc = data.code; 
 
+            // بنخزن الكود في localStorage عشان preview.html يسحبه أول مرة
             localStorage.setItem('nova_preview_code', data.code);
             localStorage.setItem('nova_preview_title', "NovaBuilder 🚀");
 
@@ -79,7 +76,6 @@ async function generateSite() {
 
     } catch (e) {
         console.error("Error details:", e);
-        // لو الخطأ مش كول داون، بننبه المستخدم
         if (!isCooldownActive) alert("فيه مشكلة حصلت: " + e.message);
     } finally {
         if (!isCooldownActive) {
@@ -90,11 +86,15 @@ async function generateSite() {
     }
 }
 
-// فتح صفحة المعاينة ودعم المشاريع اللانهائية
+// --- التعديل هنا لضمان استقلالية النوافذ ---
 const openBtn = document.getElementById('openNewTabBtn');
 if (openBtn) {
     openBtn.addEventListener('click', () => {
+        // بنفتح النافذة
         const newWin = window.open('/preview.html', '_blank');
+        
+        // بمجرد ما النافذة تفتح، بنبعتلها الكود الحالي 
+        // عشان تسجله عندها في الـ Session الخاص بيها هي بس
         newWin.onload = () => {
             newWin.sessionStorage.setItem('current_page_code', currentGeneratedCode);
         };
