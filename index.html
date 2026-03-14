@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NovaBuilder 🚀 | سيف GPT</title>
+    <title>NovaBuilder 🚀</title>
     
     <link rel="icon" href="data:,">
 
@@ -12,7 +12,6 @@
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
         body { font-family: 'Tajawal', sans-serif; }
         .preview-container { min-height: 500px; transition: all 0.3s ease; }
-        /* أنميشن خفيف للخلفية لتعزيز هوية Nova */
         .nova-bg {
             background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
         }
@@ -48,12 +47,15 @@
                 </span>
                 منطقة المعاينة المباشرة:
             </h2>
+            
             <div id="previewWrapper" class="bg-white rounded-2xl overflow-hidden shadow-2xl border-4 border-gray-800/50">
                 <iframe id="previewIframe" class="w-full preview-container" srcdoc="<body style='display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;color:#888;background:#f9fafb;'><img src='https://cdn-icons-png.flaticon.com/512/1085/1085493.png' width='100' style='margin-bottom:20px; opacity:0.5'><p>اكتب وصفاً ودع NovaBuilder يبهرك!</p></body>"></iframe>
             </div>
-        </div>
-    </div>
 
-    <script src="app.js"></script>
-</body>
-</html>
+            <div class="mt-8 flex justify-center">
+                <button id="openNewTabBtn" 
+                    class="hidden bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 px-10 rounded-xl transition-all shadow-lg flex items-center gap-3 active:scale-95">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    مشاهدة الموقع ب
