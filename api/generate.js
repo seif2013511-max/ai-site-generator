@@ -17,7 +17,6 @@ module.exports = async (req, res) => {
             return res.status(500).json({ error: "API Key is missing in Vercel settings" });
         }
 
-        // التعديل هنا: استخدام المسمى الجديد Gemini 3 Flash Preview
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${API_KEY}`;
         
         const response = await axios.post(url, {
@@ -26,7 +25,6 @@ module.exports = async (req, res) => {
 
         if (response.data && response.data.candidates && response.data.candidates[0].content) {
             let code = response.data.candidates[0].content.parts[0].text;
-            // تنظيف الكود لضمان عمل المعاينة
             code = code.replace(/```html|```/g, "").trim();
             res.status(200).json({ code: code });
         } else {
@@ -34,8 +32,14 @@ module.exports = async (req, res) => {
         }
 
     } catch (err) {
+        // --- التعديل السحري هنا ---
+        // لو جوجل بعتت خطأ، بنجيب الكود بتاعه (زي 429) والرسالة بتاعته
+        const statusCode = err.response?.status || 500;
         const msg = err.response?.data?.error?.message || err.message;
-        console.error("Gemini Error:", msg);
-        res.status(500).json({ error: `فشل التوليد: ${msg}` });
+        
+        console.error(`Gemini Error (${statusCode}):`, msg);
+        
+        // بنبعت كود الخطأ الحقيقي للمتصفح عشان app.js يعرف يشغل العداد
+        res.status(statusCode).json({ error: msg });
     }
 };
