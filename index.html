@@ -3,10 +3,7 @@ async function generateSite() {
     const btn = document.getElementById('genBtn');
     const iframe = document.getElementById('preview');
     
-    if (!prompt) {
-        alert("اكتب وصف الأول يا سيف!");
-        return;
-    }
+    if (!prompt) return alert("اكتب أي حاجة يا سيف عشان أصممها!");
 
     btn.disabled = true;
     btn.innerHTML = "جاري البناء... 🏗️";
@@ -20,14 +17,14 @@ async function generateSite() {
 
         const data = await response.json();
 
-        if (response.ok && data.code) {
+        if (data.code) {
             iframe.srcdoc = data.code;
         } else {
-            alert("خطأ من السيرفر: " + (data.error || "مشكلة في المفتاح"));
+            alert("السيرفر رد بس مفيش كود!");
         }
     } catch (error) {
         console.error(error);
-        alert("فشل الاتصال: تأكد إنك ضفت API_KEY في Vercel");
+        alert("فشل الاتصال.. تأكد إنك ضفت API_KEY في إعدادات Vercel");
     } finally {
         btn.disabled = false;
         btn.innerHTML = "توليد الموقع الآن ✨";
