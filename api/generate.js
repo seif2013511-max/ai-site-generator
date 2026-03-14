@@ -1,32 +1,25 @@
-async function generateSite() {
-    const prompt = document.getElementById('userPrompt').value.trim();
-    const btn = document.getElementById('genBtn');
-    const iframe = document.getElementById('preview');
-    
-    if (!prompt) return alert("اكتب وصف الأول!");
+const axios = require('axios');
 
-    btn.disabled = true;
-    btn.innerText = "جاري البناء... 🏗️";
+module.exports = async (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') return res.status(200).end();
 
     try {
-        // نكلم الرابط النسبي عشان يشتغل على Vercel صح
-        const response = await fetch('/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: prompt })
+        const { prompt } = req.body;
+        const API_KEY = process.env.API_KEY;
+
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+        
+        const response = await axios.post(url, {
+            contents: [{ parts: [{ text: `صمم صفحة ويب كاملة (HTML و Tailwind CSS) لـ: "${prompt}". اكتب الكود فقط بدون شرح.` }] }]
         });
 
-        const data = await response.json();
-        if (data.code) {
-            iframe.srcdoc = data.code;
-        } else {
-            alert("خطأ: " + (data.error || "فشل التوليد"));
-        }
-    } catch (e) {
-        console.error(e);
-        alert("تأكد من إعدادات Vercel و API_KEY");
-    } finally {
-        btn.disabled = false;
-        btn.innerText = "توليد الموقع الآن ✨";
+        const code = response.data.candidates[0].content.parts[0].text.replace(/```html|```/g, "").trim();
+        res.status(200).json({ code });
+    } catch (err) {
+        res.status(500).json({ error: "خطأ في السيرفر: تأكد من API_KEY" });
     }
-}
+};
