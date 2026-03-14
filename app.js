@@ -14,6 +14,7 @@ async function generateSite() {
         return;
     }
 
+    // تجهيز الواجهة لبدء التوليد
     btn.disabled = true;
     loader.classList.remove('hidden');
     btn.querySelector('span').innerText = "جاري البناء... 🏗️";
@@ -38,8 +39,11 @@ async function generateSite() {
             currentGeneratedCode = data.code; 
             iframe.srcdoc = data.code; 
 
-            // تخزين الكود فوراً في متصفح المستخدم
+            // 1. تخزين الكود في المتصفح
             localStorage.setItem('nova_preview_code', data.code);
+            
+            // 2. تخزين عنوان الموقع (الوصف الذي كتبته) ليظهر في صفحة المعاينة
+            localStorage.setItem('nova_preview_title', promptValue);
 
             if (openNewTabBtn) {
                 openNewTabBtn.classList.remove('hidden');
@@ -58,14 +62,12 @@ async function generateSite() {
     }
 }
 
-// التعديل الجوهري لفتح صفحة مستقلة تماماً
+// فتح صفحة المعاينة المستقلة
 const openBtn = document.getElementById('openNewTabBtn');
 if (openBtn) {
     openBtn.addEventListener('click', () => {
-        if (currentGeneratedCode) {
-            // هنفتح ملف اسمه preview.html إحنا هنكريه دلوقتي
-            window.open('/preview.html', '_blank');
-        }
+        // تأكد أنك أنشأت ملف preview.html في مشروعك
+        window.open('/preview.html', '_blank');
     });
 }
 
