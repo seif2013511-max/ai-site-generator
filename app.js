@@ -48,10 +48,17 @@ async function generateSite() {
             body: JSON.stringify({ prompt: promptValue })
         });
 
+        // --- التعديل الجوهري هنا ---
+        // بنشيك على حالة الاستجابة "قبل" ما نحاول نحولها لـ JSON
+        if (response.status === 429) {
+            startCooldown(30);
+            return;
+        }
+
         const data = await response.json();
 
-        // التعديل هنا: بنلقط الـ 429 والـ 500 وأي quota عشان نشغل العداد فوراً
-        if (!response.ok || response.status === 429 || (data.error && data.error.toLowerCase().includes('quota'))) {
+        // لو فيه خطأ داخل الـ JSON نفسه (زي الـ Quota)
+        if (!response.ok || (data.error && data.error.toLowerCase().includes('quota'))) {
             startCooldown(30); 
             return; 
         }
@@ -60,7 +67,6 @@ async function generateSite() {
             currentGeneratedCode = data.code; 
             iframe.srcdoc = data.code; 
 
-            // تخزين الكود للنافذة اللي هتفتح (مهم للمعاينة)
             localStorage.setItem('nova_preview_code', data.code);
             localStorage.setItem('nova_preview_title', "NovaBuilder 🚀");
 
@@ -73,6 +79,7 @@ async function generateSite() {
 
     } catch (e) {
         console.error("Error details:", e);
+        // لو الخطأ مش كول داون، بننبه المستخدم
         if (!isCooldownActive) alert("فيه مشكلة حصلت: " + e.message);
     } finally {
         if (!isCooldownActive) {
@@ -83,13 +90,11 @@ async function generateSite() {
     }
 }
 
-// فتح صفحة المعاينة (دعم المشاريع اللانهائية)
+// فتح صفحة المعاينة ودعم المشاريع اللانهائية
 const openBtn = document.getElementById('openNewTabBtn');
 if (openBtn) {
     openBtn.addEventListener('click', () => {
         const newWin = window.open('/preview.html', '_blank');
-        
-        // ده السطر اللي بيخلي كل نافذة مستقلة "بالكود بتاعها"
         newWin.onload = () => {
             newWin.sessionStorage.setItem('current_page_code', currentGeneratedCode);
         };
@@ -97,14 +102,3 @@ if (openBtn) {
 }
 
 document.getElementById('generateBtn').addEventListener('click', generateSite);
-
-// --- فكرة إضافية: لو عايز تضيف زرار تحميل الملف بره ---
-function downloadCode() {
-    if (!currentGeneratedCode) return;
-    const blob = new Blob([currentGeneratedCode], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'NovaBuilder_Site.html';
-    a.click();
-}
