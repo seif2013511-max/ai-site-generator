@@ -1,7 +1,7 @@
 let currentGeneratedCode = "";
 let isCooldownActive = false; 
 
-// دالة العد التنازلي المطورة
+// دالة العد التنازلي (حائط الصد ضد زحمة الطلبات)
 function startCooldown(seconds) {
     const btn = document.getElementById('generateBtn');
     const loader = document.getElementById('loader');
@@ -19,7 +19,7 @@ function startCooldown(seconds) {
             clearInterval(interval);
             isCooldownActive = false;
             btn.disabled = false;
-            btn.querySelector('span').innerText = "توليد الموقع الآن ✨";
+            btn.querySelector('span').innerText = "ابدأ بناء مشروعك الآن ✨";
         }
     }, 1000);
 }
@@ -35,10 +35,10 @@ async function generateSite() {
 
     if (!promptValue || isCooldownActive) return;
 
+    // تجهيز الواجهة للبدء
     btn.disabled = true;
     loader.classList.remove('hidden');
-    btn.querySelector('span').innerText = "جاري البناء... 🏗️";
-    
+    btn.querySelector('span').innerText = "جاري البناء بواسطة Gemini 3... 🏗️";
     if (openNewTabBtn) openNewTabBtn.classList.add('hidden');
 
     try {
@@ -48,22 +48,24 @@ async function generateSite() {
             body: JSON.stringify({ prompt: promptValue })
         });
 
-        const data = await response.json();
-
-        if (response.status === 429 || (data.error && data.error.toLowerCase().includes('quota'))) {
-            startCooldown(30); 
-            return; 
+        // رادار الأخطاء المطور لنموذج Gemini 3
+        if (response.status === 429 || response.status === 503) {
+            startCooldown(30);
+            return;
         }
 
-        if (!response.ok) {
-            throw new Error(data.error || "خطأ في السيرفر");
+        const data = await response.json();
+
+        if (!response.ok || (data.error && data.error.toLowerCase().includes('quota'))) {
+            startCooldown(30); 
+            return; 
         }
 
         if (data.code) {
             currentGeneratedCode = data.code; 
             iframe.srcdoc = data.code; 
 
-            // بنخزن الكود في localStorage عشان preview.html يسحبه أول مرة
+            // تخزين البيانات للمعاينة والاستقلالية
             localStorage.setItem('nova_preview_code', data.code);
             localStorage.setItem('nova_preview_title', "NovaBuilder 🚀");
 
@@ -71,34 +73,38 @@ async function generateSite() {
                 openNewTabBtn.classList.remove('hidden');
             }
         } else {
-            throw new Error("لم يتم استلام كود من الذكاء الاصطناعي");
+            throw new Error("لم يتم استلام كود، حاول مجدداً.");
         }
 
     } catch (e) {
         console.error("Error details:", e);
-        if (!isCooldownActive) alert("فيه مشكلة حصلت: " + e.message);
+        if (!isCooldownActive) alert("عذراً، حدث خطأ: " + e.message);
     } finally {
         if (!isCooldownActive) {
             btn.disabled = false;
             loader.classList.add('hidden');
-            btn.querySelector('span').innerText = "توليد الموقع الآن ✨";
+            btn.querySelector('span').innerText = "ابدأ بناء مشروعك الآن ✨";
         }
     }
 }
 
-// --- التعديل هنا لضمان استقلالية النوافذ ---
+// دالة تحميل الكود كملف خارجي (هدية إضافية لمشروعك)
+function downloadProject() {
+    if (!currentGeneratedCode) return;
+    const blob = new Blob([currentGeneratedCode], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'NovaBuilder_Project.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+// فتح صفحة المعاينة المستقلة
 const openBtn = document.getElementById('openNewTabBtn');
 if (openBtn) {
     openBtn.addEventListener('click', () => {
-        // بنفتح النافذة
         const newWin = window.open('/preview.html', '_blank');
-        
-        // بمجرد ما النافذة تفتح، بنبعتلها الكود الحالي 
-        // عشان تسجله عندها في الـ Session الخاص بيها هي بس
         newWin.onload = () => {
-            newWin.sessionStorage.setItem('current_page_code', currentGeneratedCode);
-        };
-    });
-}
-
-document.getElementById('generateBtn').addEventListener('click', generateSite);
+            newWin.sessionStorage.setItem('
