@@ -1,22 +1,20 @@
 let currentGeneratedCode = "";
-let isCooldownActive = false; 
 
+// دالة العد التنازلي الجديدة
 function startCooldown(seconds) {
     const btn = document.getElementById('generateBtn');
     const loader = document.getElementById('loader');
     let counter = seconds;
-    isCooldownActive = true;
 
     btn.disabled = true;
-    loader.classList.add('hidden');
+    loader.classList.add('hidden'); // إخفاء اللودر لأننا بنعد تنازلي مش بنولد كود
 
     const interval = setInterval(() => {
-        btn.querySelector('span').innerText = `جوجل مشغولة.. انتظر ${counter} ثانية ⏳`;
+        btn.querySelector('span').innerText = `انتظر ${counter} ثانية للراحة... ⏳`;
         counter--;
 
         if (counter < 0) {
             clearInterval(interval);
-            isCooldownActive = false;
             btn.disabled = false;
             btn.querySelector('span').innerText = "توليد الموقع الآن ✨";
         }
@@ -32,8 +30,12 @@ async function generateSite() {
     
     const promptValue = promptInput.value;
 
-    if (!promptValue || isCooldownActive) return;
+    if (!promptValue) {
+        alert("من فضلك اكتب وصف للموقع أولاً!");
+        return;
+    }
 
+    // تجهيز الواجهة لبدء التوليد
     btn.disabled = true;
     loader.classList.remove('hidden');
     btn.querySelector('span').innerText = "جاري البناء... 🏗️";
@@ -49,9 +51,10 @@ async function generateSite() {
 
         const data = await response.json();
 
+        // --- التعديل هنا لاكتشاف زحمة جوجل ---
         if (response.status === 429 || (data.error && data.error.toLowerCase().includes('quota'))) {
-            startCooldown(30); 
-            return; 
+            startCooldown(15); // هينتظر 15 ثانية لو المحاولات خلصت
+            return; // نوقف الدالة هنا عشان ميروحش للـ finally يفتح الزرار
         }
 
         if (!response.ok) {
@@ -62,7 +65,9 @@ async function generateSite() {
             currentGeneratedCode = data.code; 
             iframe.srcdoc = data.code; 
 
-            // بنشيل الـ LocalStorage هنا لأننا هنستخدم طريقة "الإرسال المباشر" للنافذة
+            localStorage.setItem('nova_preview_code', data.code);
+            localStorage.setItem('nova_preview_title', "NovaBuilder 🚀");
+
             if (openNewTabBtn) {
                 openNewTabBtn.classList.remove('hidden');
             }
@@ -72,9 +77,10 @@ async function generateSite() {
 
     } catch (e) {
         console.error("Error details:", e);
-        if (!isCooldownActive) alert("فيه مشكلة حصلت: " + e.message);
+        alert("فيه مشكلة حصلت: " + e.message);
     } finally {
-        if (!isCooldownActive) {
+        // نرجع الزرار لأصله "فقط" لو مفيش عد تنازلي شغال
+        if (!btn.querySelector('span').innerText.includes('انتظر')) {
             btn.disabled = false;
             loader.classList.add('hidden');
             btn.querySelector('span').innerText = "توليد الموقع الآن ✨";
@@ -82,16 +88,13 @@ async function generateSite() {
     }
 }
 
-// --- التعديل السحري هنا ---
+// فتح صفحة المعاينة
 const openBtn = document.getElementById('openNewTabBtn');
 if (openBtn) {
     openBtn.addEventListener('click', () => {
-        // بدلاً من فتح صفحة preview.html، هنفتح نافذة ونحقن فيها الكود فوراً
-        const newWindow = window.open('', '_blank');
-        newWindow.document.write(currentGeneratedCode);
-        newWindow.document.title = "NovaBuilder Preview 🚀";
-        newWindow.document.close(); // مهم جداً عشان المتصفح يفهم إن الصفحة خلصت
+        window.open('/preview.html', '_blank');
     });
 }
 
+// ربط وظيفة التوليد بالزر الأساسي
 document.getElementById('generateBtn').addEventListener('click', generateSite);
