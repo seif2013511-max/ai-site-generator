@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>معاينة NovaBuilder 🚀</title>
+    <title>NovaBuilder 🚀</title>
     <style>
-        /* عشان المعاينة تاخد الشاشة كلها بدون هوامش */
         body, html { 
             margin: 0; 
             padding: 0; 
@@ -26,23 +25,27 @@
 
     <script>
         function updateContent() {
-            // بنجيب الكود والاسم اللي خزنناهم في الـ app.js
+            // سحب الكود المخزن
             const code = localStorage.getItem('nova_preview_code');
+            // سحب العنوان (اللي ثبتناه في app.js على NovaBuilder)
             const title = localStorage.getItem('nova_preview_title');
             
             if (code) {
                 document.getElementById('output').srcdoc = code;
             }
+            
+            // تحديث عنوان التاب
             if (title) {
-                // بنغير اسم التاب (العنوان) باسم الحاجة اللي معمولة
-                document.title = title + " | NovaBuilder 🚀";
+                document.title = title;
+            } else {
+                document.title = "NovaBuilder 🚀";
             }
         }
 
-        // تشغيل الوظيفة أول ما الصفحة تفتح
+        // التحديث عند الفتح
         updateContent();
         
-        // لو ولدت كود جديد وأنت فاتح الصفحة دي، هتتحدث لوحدها
+        // التحديث التلقائي في حالة تغيير الكود والصفحة مفتوحة
         window.addEventListener('storage', (e) => {
             if (e.key === 'nova_preview_code' || e.key === 'nova_preview_title') {
                 updateContent();
