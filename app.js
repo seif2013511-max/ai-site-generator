@@ -1,4 +1,3 @@
-// متغير لتخزين الكود عشان يفتح في الصفحة الجديدة
 let currentGeneratedCode = "";
 
 async function generateSite() {
@@ -6,7 +5,6 @@ async function generateSite() {
     const btn = document.getElementById('generateBtn');
     const iframe = document.getElementById('previewIframe');
     const loader = document.getElementById('loader');
-    
     const openNewTabBtn = document.getElementById('openNewTabBtn');
     
     const promptValue = promptInput.value;
@@ -16,7 +14,6 @@ async function generateSite() {
         return;
     }
 
-    // تجهيز الواجهة
     btn.disabled = true;
     loader.classList.remove('hidden');
     btn.querySelector('span').innerText = "جاري البناء... 🏗️";
@@ -41,6 +38,9 @@ async function generateSite() {
             currentGeneratedCode = data.code; 
             iframe.srcdoc = data.code; 
 
+            // تخزين الكود فوراً في متصفح المستخدم
+            localStorage.setItem('nova_preview_code', data.code);
+
             if (openNewTabBtn) {
                 openNewTabBtn.classList.remove('hidden');
             }
@@ -58,22 +58,15 @@ async function generateSite() {
     }
 }
 
-// التعديل هنا: برمجة الزرار ليدعم الـ Refresh باستخدام الـ Blob
+// التعديل الجوهري لفتح صفحة مستقلة تماماً
 const openBtn = document.getElementById('openNewTabBtn');
 if (openBtn) {
     openBtn.addEventListener('click', () => {
         if (currentGeneratedCode) {
-            // تحويل الكود لملف مؤقت في ذاكرة المتصفح
-            const blob = new Blob([currentGeneratedCode], { type: 'text/html' });
-            const blobUrl = URL.createObjectURL(blob);
-            
-            // فتح الرابط المؤقت في نافذة جديدة
-            window.open(blobUrl, '_blank');
-            
-            // نصيحة: الروابط دي بتفضل في الذاكرة، بس للمعاينة هي مثالية
+            // هنفتح ملف اسمه preview.html إحنا هنكريه دلوقتي
+            window.open('/preview.html', '_blank');
         }
     });
 }
 
-// ربط زرار التوليد الأساسي
 document.getElementById('generateBtn').addEventListener('click', generateSite);
