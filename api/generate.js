@@ -14,12 +14,12 @@ module.exports = async (req, res) => {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
         
         const response = await axios.post(url, {
-            contents: [{ parts: [{ text: `صمم صفحة ويب كاملة (HTML و Tailwind CSS) لـ: "${prompt}". اكتب الكود فقط بدون شرح.` }] }]
+            contents: [{ parts: [{ text: `صمم صفحة ويب كاملة احترافية بـ HTML و Tailwind CSS لـ: "${prompt}". اكتب الكود فقط.` }] }]
         });
 
         const code = response.data.candidates[0].content.parts[0].text.replace(/```html|```/g, "").trim();
-        res.status(200).json({ code });
+        res.status(200).json({ code: code });
     } catch (err) {
-        res.status(500).json({ error: "خطأ في السيرفر: تأكد من API_KEY" });
+        res.status(500).json({ error: "خطأ في السيرفر أو API_KEY" });
     }
 };
