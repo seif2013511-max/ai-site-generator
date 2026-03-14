@@ -1,7 +1,6 @@
 let currentGeneratedCode = "";
-let isCooldownActive = false; // متغير جديد لمنع التداخل
+let isCooldownActive = false; 
 
-// دالة العد التنازلي المطورة
 function startCooldown(seconds) {
     const btn = document.getElementById('generateBtn');
     const loader = document.getElementById('loader');
@@ -35,12 +34,6 @@ async function generateSite() {
 
     if (!promptValue || isCooldownActive) return;
 
-    if (!promptValue) {
-        alert("من فضلك اكتب وصف للموقع أولاً!");
-        return;
-    }
-
-    // تجهيز الواجهة لبدء التوليد
     btn.disabled = true;
     loader.classList.remove('hidden');
     btn.querySelector('span').innerText = "جاري البناء... 🏗️";
@@ -56,9 +49,8 @@ async function generateSite() {
 
         const data = await response.json();
 
-        // اكتشاف الزحمة ونفاد المحاولات
         if (response.status === 429 || (data.error && data.error.toLowerCase().includes('quota'))) {
-            startCooldown(30); // 30 ثانية عشان نضمن إن جوجل هديت
+            startCooldown(30); 
             return; 
         }
 
@@ -70,9 +62,7 @@ async function generateSite() {
             currentGeneratedCode = data.code; 
             iframe.srcdoc = data.code; 
 
-            localStorage.setItem('nova_preview_code', data.code);
-            localStorage.setItem('nova_preview_title', "NovaBuilder 🚀");
-
+            // بنشيل الـ LocalStorage هنا لأننا هنستخدم طريقة "الإرسال المباشر" للنافذة
             if (openNewTabBtn) {
                 openNewTabBtn.classList.remove('hidden');
             }
@@ -82,10 +72,8 @@ async function generateSite() {
 
     } catch (e) {
         console.error("Error details:", e);
-        // لو الخطأ مش بسبب الزحمة، طلع التنبيه العادي
         if (!isCooldownActive) alert("فيه مشكلة حصلت: " + e.message);
     } finally {
-        // ميرجعش يفتح الزرار لو العداد شغال
         if (!isCooldownActive) {
             btn.disabled = false;
             loader.classList.add('hidden');
@@ -94,13 +82,16 @@ async function generateSite() {
     }
 }
 
-// فتح صفحة المعاينة
+// --- التعديل السحري هنا ---
 const openBtn = document.getElementById('openNewTabBtn');
 if (openBtn) {
     openBtn.addEventListener('click', () => {
-        window.open('/preview.html', '_blank');
+        // بدلاً من فتح صفحة preview.html، هنفتح نافذة ونحقن فيها الكود فوراً
+        const newWindow = window.open('', '_blank');
+        newWindow.document.write(currentGeneratedCode);
+        newWindow.document.title = "NovaBuilder Preview 🚀";
+        newWindow.document.close(); // مهم جداً عشان المتصفح يفهم إن الصفحة خلصت
     });
 }
 
-// ربط وظيفة التوليد بالزر الأساسي
 document.getElementById('generateBtn').addEventListener('click', generateSite);
