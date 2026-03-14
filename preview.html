@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>معاينة NovaBuilder 🚀</title>
     <style>
-        /* عشان المعاينة تاخد الشاشة كلها بدون هوامش */
         body, html { 
             margin: 0; 
             padding: 0; 
@@ -26,28 +25,28 @@
 
     <script>
         function updateContent() {
-            // بنجيب الكود والاسم اللي خزنناهم في الـ app.js
-            const code = localStorage.getItem('nova_preview_code');
+            // 1. أولاً بنشوف هل فيه كود مبعوث في الـ sessionStorage الخاص بالنافذة دي؟
+            const sessionCode = sessionStorage.getItem('current_page_code');
             const title = localStorage.getItem('nova_preview_title');
             
-            if (code) {
-                document.getElementById('output').srcdoc = code;
-            }
-            if (title) {
-                // بنغير اسم التاب (العنوان) باسم الحاجة اللي معمولة
-                document.title = title + " | NovaBuilder 🚀";
+            if (sessionCode) {
+                document.getElementById('output').srcdoc = sessionCode;
+                if (title) document.title = title + " | NovaBuilder 🚀";
+            } else {
+                // 2. لو مفيش (أول مرة تفتح)، بنجيب من الـ localStorage ونخزنه فوراً في النافذة دي
+                const localCode = localStorage.getItem('nova_preview_code');
+                if (localCode) {
+                    document.getElementById('output').srcdoc = localCode;
+                    // بنحفظ نسخة "خاصة" بالتاب ده بس عشان ميتغيرش تاني
+                    sessionStorage.setItem('current_page_code', localCode);
+                }
             }
         }
 
-        // تشغيل الوظيفة أول ما الصفحة تفتح
         updateContent();
         
-        // لو ولدت كود جديد وأنت فاتح الصفحة دي، هتتحدث لوحدها
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'nova_preview_code' || e.key === 'nova_preview_title') {
-                updateContent();
-            }
-        });
+        // عطلنا الـ storage listener هنا عشان الصفحة متحدثش نفسها لو عملت موقع جديد
+        // وبكده كل تاب يفضل محتفظ بالموقع اللي اتفتح فيه
     </script>
 </body>
 </html>
