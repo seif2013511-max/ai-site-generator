@@ -14,6 +14,7 @@ async function generateSite() {
         return;
     }
 
+    // تجهيز الواجهة لبدء التوليد
     btn.disabled = true;
     loader.classList.remove('hidden');
     btn.querySelector('span').innerText = "جاري البناء... 🏗️";
@@ -38,19 +39,11 @@ async function generateSite() {
             currentGeneratedCode = data.code; 
             iframe.srcdoc = data.code; 
 
-            // --- التعديل هنا ليكون العنوان "كلمة ذات صلة" ---
-            const keywords = ["متجر", "مطعم", "شركة", "معرض", "مدونة", "بروفايل", "عقارات", "تطبيق", "موقع", "كافيه", "عطور", "سيارات"];
-            // بنشوف لو فيه كلمة من الكلمات المشهورة دي موجودة في وصفك
-            let smartTitle = keywords.find(word => promptValue.includes(word)) || "مشروع جديد";
-            
-            // لو ملقيناش كلمة مشهورة، هياخد أول كلمتين بس كعنوان مختصر
-            if (smartTitle === "مشروع جديد") {
-                smartTitle = promptValue.split(' ').slice(0, 2).join(' ');
-            }
-
+            // 1. تخزين الكود في المتصفح
             localStorage.setItem('nova_preview_code', data.code);
-            localStorage.setItem('nova_preview_title', smartTitle);
-            // ----------------------------------------------
+            
+            // 2. تثبيت العنوان على NovaBuilder 🚀
+            localStorage.setItem('nova_preview_title', "NovaBuilder 🚀");
 
             if (openNewTabBtn) {
                 openNewTabBtn.classList.remove('hidden');
@@ -69,6 +62,7 @@ async function generateSite() {
     }
 }
 
+// فتح صفحة المعاينة المستقلة
 const openBtn = document.getElementById('openNewTabBtn');
 if (openBtn) {
     openBtn.addEventListener('click', () => {
