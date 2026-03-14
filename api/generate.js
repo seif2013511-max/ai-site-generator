@@ -1,6 +1,7 @@
 const axios = require('axios');
 
 module.exports = async (req, res) => {
+    // إعدادات الـ Header لضمان قبول البيانات
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -9,28 +10,24 @@ module.exports = async (req, res) => {
 
     try {
         const { prompt } = req.body;
+        // هنا بننادي المفتاح اللي أنت لسه موريهولي في الصورة
         const API_KEY = process.env.API_KEY;
 
-        if (!API_KEY) {
-            return res.status(500).json({ error: "API_KEY is missing in Vercel settings" });
-        }
-
-        // استخدام نموذج gemini-1.5-flash اللي أنت لسه سائل عليه وشغال
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
         
         const response = await axios.post(url, {
-            contents: [{ parts: [{ text: `صمم صفحة ويب كاملة بـ HTML و Tailwind CSS بناءً على الوصف التالي: "${prompt}". اكتب الكود فقط بدون مقدمات.` }] }]
+            contents: [{ parts: [{ text: `Write only pure HTML and Tailwind CSS code for: ${prompt}. No explanations.` }] }]
         });
 
-        if (response.data && response.data.candidates && response.data.candidates[0].content) {
+        if (response.data && response.data.candidates) {
             let code = response.data.candidates[0].content.parts[0].text;
             code = code.replace(/```html|```/g, "").trim();
-            return res.status(200).json({ code: code });
+            return res.status(200).json({ code });
         } else {
-            return res.status(500).json({ error: "النموذج لم يرسل كوداً صحيحاً" });
+            return res.status(500).json({ error: "Gemini error" });
         }
     } catch (err) {
-        console.error("Error details:", err.response ? err.response.data : err.message);
-        return res.status(500).json({ error: "فشل الاتصال بجوجل: " + (err.response ? err.response.data.error.message : err.message) });
+        // ده هيطبع لك الخطأ الحقيقي في الـ Vercel Logs عشان نعرف فيه إيه
+        return res.status(500).json({ error: err.message });
     }
 };
