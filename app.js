@@ -1,25 +1,27 @@
 let currentGeneratedCode = "";
 let isCooldownActive = false; 
 
-// دالة العد التنازلي (حائط الصد ضد زحمة الطلبات)
+// دالة العد التنازلي
 function startCooldown(seconds) {
     const btn = document.getElementById('generateBtn');
     const loader = document.getElementById('loader');
     let counter = seconds;
     isCooldownActive = true;
 
-    btn.disabled = true;
-    loader.classList.add('hidden');
+    if (btn) btn.disabled = true;
+    if (loader) loader.classList.add('hidden');
 
     const interval = setInterval(() => {
-        btn.querySelector('span').innerText = `جوجل مشغولة.. انتظر ${counter} ثانية ⏳`;
+        if (btn) btn.querySelector('span').innerText = `جوجل مشغولة.. انتظر ${counter} ثانية ⏳`;
         counter--;
 
         if (counter < 0) {
             clearInterval(interval);
             isCooldownActive = false;
-            btn.disabled = false;
-            btn.querySelector('span').innerText = "ابدأ بناء مشروعك الآن ✨";
+            if (btn) {
+                btn.disabled = false;
+                btn.querySelector('span').innerText = "ابدأ بناء مشروعك الآن ✨";
+            }
         }
     }, 1000);
 }
@@ -31,14 +33,16 @@ async function generateSite() {
     const loader = document.getElementById('loader');
     const openNewTabBtn = document.getElementById('openNewTabBtn');
     
+    if (!promptInput || !btn) return; // حماية في حال عدم وجود العناصر
+
     const promptValue = promptInput.value;
 
     if (!promptValue || isCooldownActive) return;
 
-    // تجهيز الواجهة للبدء
     btn.disabled = true;
-    loader.classList.remove('hidden');
-    btn.querySelector('span').innerText = "جاري البناء بواسطة Gemini 3... 🏗️";
+    if (loader) loader.classList.remove('hidden');
+    btn.querySelector('span').innerText = "جاري البناء... 🏗️";
+    
     if (openNewTabBtn) openNewTabBtn.classList.add('hidden');
 
     try {
@@ -48,10 +52,10 @@ async function generateSite() {
             body: JSON.stringify({ prompt: promptValue })
         });
 
-        // رادار الأخطاء المطور لنموذج Gemini 3
-        if (response.status === 429 || response.status === 503) {
-            startCooldown(30);
-            return;
+        // لقط الأخطاء لتشغيل العداد
+        if (response.status === 429) {
+            startCooldown(30); 
+            return; 
         }
 
         const data = await response.json();
@@ -63,48 +67,39 @@ async function generateSite() {
 
         if (data.code) {
             currentGeneratedCode = data.code; 
-            iframe.srcdoc = data.code; 
+            if (iframe) iframe.srcdoc = data.code; 
 
-            // تخزين البيانات للمعاينة والاستقلالية
             localStorage.setItem('nova_preview_code', data.code);
             localStorage.setItem('nova_preview_title', "NovaBuilder 🚀");
 
-            if (openNewTabBtn) {
-                openNewTabBtn.classList.remove('hidden');
-            }
-        } else {
-            throw new Error("لم يتم استلام كود، حاول مجدداً.");
+            if (openNewTabBtn) openNewTabBtn.classList.remove('hidden');
         }
 
     } catch (e) {
         console.error("Error details:", e);
-        if (!isCooldownActive) alert("عذراً، حدث خطأ: " + e.message);
+        if (!isCooldownActive) alert("حدث خطأ: " + e.message);
     } finally {
         if (!isCooldownActive) {
             btn.disabled = false;
-            loader.classList.add('hidden');
+            if (loader) loader.classList.add('hidden');
             btn.querySelector('span').innerText = "ابدأ بناء مشروعك الآن ✨";
         }
     }
 }
 
-// دالة تحميل الكود كملف خارجي (هدية إضافية لمشروعك)
-function downloadProject() {
-    if (!currentGeneratedCode) return;
-    const blob = new Blob([currentGeneratedCode], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'NovaBuilder_Project.html';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+// تأكد من أن الـ ID هنا هو 'generateBtn' كما في ملف الـ HTML الخاص بك
+const mainBtn = document.getElementById('generateBtn');
+if (mainBtn) {
+    mainBtn.addEventListener('click', generateSite);
 }
 
-// فتح صفحة المعاينة المستقلة
+// زر المعاينة المستقلة
 const openBtn = document.getElementById('openNewTabBtn');
 if (openBtn) {
     openBtn.addEventListener('click', () => {
         const newWin = window.open('/preview.html', '_blank');
         newWin.onload = () => {
-            newWin.sessionStorage.setItem('
+            newWin.sessionStorage.setItem('current_page_code', currentGeneratedCode);
+        };
+    });
+}
