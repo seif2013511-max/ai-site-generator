@@ -1,27 +1,25 @@
 let currentGeneratedCode = "";
-let isCooldownActive = false; 
+let isCooldownActive = false; // متغير جديد لمنع التداخل
 
-// دالة العد التنازلي
+// دالة العد التنازلي المطورة
 function startCooldown(seconds) {
     const btn = document.getElementById('generateBtn');
     const loader = document.getElementById('loader');
     let counter = seconds;
     isCooldownActive = true;
 
-    if (btn) btn.disabled = true;
-    if (loader) loader.classList.add('hidden');
+    btn.disabled = true;
+    loader.classList.add('hidden');
 
     const interval = setInterval(() => {
-        if (btn) btn.querySelector('span').innerText = `جوجل مشغولة.. انتظر ${counter} ثانية ⏳`;
+        btn.querySelector('span').innerText = `جوجل مشغولة.. انتظر ${counter} ثانية ⏳`;
         counter--;
 
         if (counter < 0) {
             clearInterval(interval);
             isCooldownActive = false;
-            if (btn) {
-                btn.disabled = false;
-                btn.querySelector('span').innerText = "ابدأ بناء مشروعك الآن ✨";
-            }
+            btn.disabled = false;
+            btn.querySelector('span').innerText = "توليد الموقع الآن ✨";
         }
     }, 1000);
 }
@@ -33,14 +31,18 @@ async function generateSite() {
     const loader = document.getElementById('loader');
     const openNewTabBtn = document.getElementById('openNewTabBtn');
     
-    if (!promptInput || !btn) return; // حماية في حال عدم وجود العناصر
-
     const promptValue = promptInput.value;
 
     if (!promptValue || isCooldownActive) return;
 
+    if (!promptValue) {
+        alert("من فضلك اكتب وصف للموقع أولاً!");
+        return;
+    }
+
+    // تجهيز الواجهة لبدء التوليد
     btn.disabled = true;
-    if (loader) loader.classList.remove('hidden');
+    loader.classList.remove('hidden');
     btn.querySelector('span').innerText = "جاري البناء... 🏗️";
     
     if (openNewTabBtn) openNewTabBtn.classList.add('hidden');
@@ -52,54 +54,53 @@ async function generateSite() {
             body: JSON.stringify({ prompt: promptValue })
         });
 
-        // لقط الأخطاء لتشغيل العداد
-        if (response.status === 429) {
-            startCooldown(30); 
+        const data = await response.json();
+
+        // اكتشاف الزحمة ونفاد المحاولات
+        if (response.status === 429 || (data.error && data.error.toLowerCase().includes('quota'))) {
+            startCooldown(30); // 30 ثانية عشان نضمن إن جوجل هديت
             return; 
         }
 
-        const data = await response.json();
-
-        if (!response.ok || (data.error && data.error.toLowerCase().includes('quota'))) {
-            startCooldown(30); 
-            return; 
+        if (!response.ok) {
+            throw new Error(data.error || "خطأ في السيرفر");
         }
 
         if (data.code) {
             currentGeneratedCode = data.code; 
-            if (iframe) iframe.srcdoc = data.code; 
+            iframe.srcdoc = data.code; 
 
             localStorage.setItem('nova_preview_code', data.code);
             localStorage.setItem('nova_preview_title', "NovaBuilder 🚀");
 
-            if (openNewTabBtn) openNewTabBtn.classList.remove('hidden');
+            if (openNewTabBtn) {
+                openNewTabBtn.classList.remove('hidden');
+            }
+        } else {
+            throw new Error("لم يتم استلام كود من الذكاء الاصطناعي");
         }
 
     } catch (e) {
         console.error("Error details:", e);
-        if (!isCooldownActive) alert("حدث خطأ: " + e.message);
+        // لو الخطأ مش بسبب الزحمة، طلع التنبيه العادي
+        if (!isCooldownActive) alert("فيه مشكلة حصلت: " + e.message);
     } finally {
+        // ميرجعش يفتح الزرار لو العداد شغال
         if (!isCooldownActive) {
             btn.disabled = false;
-            if (loader) loader.classList.add('hidden');
-            btn.querySelector('span').innerText = "ابدأ بناء مشروعك الآن ✨";
+            loader.classList.add('hidden');
+            btn.querySelector('span').innerText = "توليد الموقع الآن ✨";
         }
     }
 }
 
-// تأكد من أن الـ ID هنا هو 'generateBtn' كما في ملف الـ HTML الخاص بك
-const mainBtn = document.getElementById('generateBtn');
-if (mainBtn) {
-    mainBtn.addEventListener('click', generateSite);
-}
-
-// زر المعاينة المستقلة
+// فتح صفحة المعاينة
 const openBtn = document.getElementById('openNewTabBtn');
 if (openBtn) {
     openBtn.addEventListener('click', () => {
-        const newWin = window.open('/preview.html', '_blank');
-        newWin.onload = () => {
-            newWin.sessionStorage.setItem('current_page_code', currentGeneratedCode);
-        };
+        window.open('/preview.html', '_blank');
     });
 }
+
+// ربط وظيفة التوليد بالزر الأساسي
+document.getElementById('generateBtn').addEventListener('click', generateSite);
