@@ -39,10 +39,10 @@ async function generateSite() {
             currentGeneratedCode = data.code; 
             iframe.srcdoc = data.code; 
 
-            // 1. تخزين الكود في المتصفح
+            // 1. تخزين الكود في المتصفح ليعمل حتى بعد إعادة التحميل
             localStorage.setItem('nova_preview_code', data.code);
             
-            // 2. تثبيت العنوان على NovaBuilder 🚀
+            // 2. تثبيت عنوان الصفحة على NovaBuilder 🚀 كما طلبت
             localStorage.setItem('nova_preview_title', "NovaBuilder 🚀");
 
             if (openNewTabBtn) {
@@ -62,7 +62,7 @@ async function generateSite() {
     }
 }
 
-// فتح صفحة المعاينة المستقلة
+// فتح صفحة المعاينة (تأكد من وجود ملف preview.html في مشروعك)
 const openBtn = document.getElementById('openNewTabBtn');
 if (openBtn) {
     openBtn.addEventListener('click', () => {
@@ -70,4 +70,5 @@ if (openBtn) {
     });
 }
 
+// ربط وظيفة التوليد بالزر الأساسي
 document.getElementById('generateBtn').addEventListener('click', generateSite);
