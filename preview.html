@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>معاينة NovaBuilder 🚀</title>
+    <style>
+        /* عشان المعاينة تاخد الشاشة كلها بدون هوامش */
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            height: 100%; 
+            overflow: hidden; 
+            background: #0f172a; 
+        }
+        iframe { 
+            width: 100%; 
+            height: 100%; 
+            border: none; 
+            background: white; 
+        }
+    </style>
+</head>
+<body>
+    <iframe id="output"></iframe>
+
+    <script>
+        function updateContent() {
+            // بنجيب الكود والاسم اللي خزنناهم في الـ app.js
+            const code = localStorage.getItem('nova_preview_code');
+            const title = localStorage.getItem('nova_preview_title');
+            
+            if (code) {
+                document.getElementById('output').srcdoc = code;
+            }
+            if (title) {
+                // بنغير اسم التاب (العنوان) باسم الحاجة اللي معمولة
+                document.title = title + " | NovaBuilder 🚀";
+            }
+        }
+
+        // تشغيل الوظيفة أول ما الصفحة تفتح
+        updateContent();
+        
+        // لو ولدت كود جديد وأنت فاتح الصفحة دي، هتتحدث لوحدها
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'nova_preview_code' || e.key === 'nova_preview_title') {
+                updateContent();
+            }
+        });
+    </script>
+</body>
+</html>
