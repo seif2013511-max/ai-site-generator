@@ -7,7 +7,6 @@ async function generateSite() {
     const iframe = document.getElementById('previewIframe');
     const loader = document.getElementById('loader');
     
-    // تأكدنا إن الزرار ده موجود في الـ HTML قبل ما نطلبه
     const openNewTabBtn = document.getElementById('openNewTabBtn');
     
     const promptValue = promptInput.value;
@@ -22,7 +21,6 @@ async function generateSite() {
     loader.classList.remove('hidden');
     btn.querySelector('span').innerText = "جاري البناء... 🏗️";
     
-    // إخفاء زر المعاينة لو كان ظاهر من محاولة سابقة
     if (openNewTabBtn) openNewTabBtn.classList.add('hidden');
 
     try {
@@ -40,10 +38,9 @@ async function generateSite() {
         const data = await response.json();
         
         if (data.code) {
-            currentGeneratedCode = data.code; // حفظ الكود
-            iframe.srcdoc = data.code; // عرض في المعاينة
+            currentGeneratedCode = data.code; 
+            iframe.srcdoc = data.code; 
 
-            // إظهار زر "مشاهدة الموقع بملء الشاشة"
             if (openNewTabBtn) {
                 openNewTabBtn.classList.remove('hidden');
             }
@@ -61,13 +58,20 @@ async function generateSite() {
     }
 }
 
-// برمجة زرار الفتح في صفحة جديدة (Window Open)
+// التعديل هنا: برمجة الزرار ليدعم الـ Refresh باستخدام الـ Blob
 const openBtn = document.getElementById('openNewTabBtn');
 if (openBtn) {
     openBtn.addEventListener('click', () => {
-        const win = window.open();
-        win.document.write(currentGeneratedCode);
-        win.document.close();
+        if (currentGeneratedCode) {
+            // تحويل الكود لملف مؤقت في ذاكرة المتصفح
+            const blob = new Blob([currentGeneratedCode], { type: 'text/html' });
+            const blobUrl = URL.createObjectURL(blob);
+            
+            // فتح الرابط المؤقت في نافذة جديدة
+            window.open(blobUrl, '_blank');
+            
+            // نصيحة: الروابط دي بتفضل في الذاكرة، بس للمعاينة هي مثالية
+        }
     });
 }
 
