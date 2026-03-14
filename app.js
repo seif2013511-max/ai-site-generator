@@ -14,7 +14,6 @@ async function generateSite() {
         return;
     }
 
-    // تجهيز الواجهة لبدء التوليد
     btn.disabled = true;
     loader.classList.remove('hidden');
     btn.querySelector('span').innerText = "جاري البناء... 🏗️";
@@ -39,11 +38,12 @@ async function generateSite() {
             currentGeneratedCode = data.code; 
             iframe.srcdoc = data.code; 
 
-            // 1. تخزين الكود في المتصفح
+            // استخراج عنوان قصير (أول 3 كلمات من الوصف أو كلمة دلالية)
+            // هنا بنحاول نخلي العنوان كلمة ليها صلة بدل الوصف الكامل
+            const shortTitle = promptValue.split(' ').slice(0, 3).join(' ') || "مشروع جديد";
+
             localStorage.setItem('nova_preview_code', data.code);
-            
-            // 2. تخزين عنوان الموقع (الوصف الذي كتبته) ليظهر في صفحة المعاينة
-            localStorage.setItem('nova_preview_title', promptValue);
+            localStorage.setItem('nova_preview_title', shortTitle);
 
             if (openNewTabBtn) {
                 openNewTabBtn.classList.remove('hidden');
@@ -62,11 +62,9 @@ async function generateSite() {
     }
 }
 
-// فتح صفحة المعاينة المستقلة
 const openBtn = document.getElementById('openNewTabBtn');
 if (openBtn) {
     openBtn.addEventListener('click', () => {
-        // تأكد أنك أنشأت ملف preview.html في مشروعك
         window.open('/preview.html', '_blank');
     });
 }
