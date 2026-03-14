@@ -38,12 +38,19 @@ async function generateSite() {
             currentGeneratedCode = data.code; 
             iframe.srcdoc = data.code; 
 
-            // استخراج عنوان قصير (أول 3 كلمات من الوصف أو كلمة دلالية)
-            // هنا بنحاول نخلي العنوان كلمة ليها صلة بدل الوصف الكامل
-            const shortTitle = promptValue.split(' ').slice(0, 3).join(' ') || "مشروع جديد";
+            // --- التعديل هنا ليكون العنوان "كلمة ذات صلة" ---
+            const keywords = ["متجر", "مطعم", "شركة", "معرض", "مدونة", "بروفايل", "عقارات", "تطبيق", "موقع", "كافيه", "عطور", "سيارات"];
+            // بنشوف لو فيه كلمة من الكلمات المشهورة دي موجودة في وصفك
+            let smartTitle = keywords.find(word => promptValue.includes(word)) || "مشروع جديد";
+            
+            // لو ملقيناش كلمة مشهورة، هياخد أول كلمتين بس كعنوان مختصر
+            if (smartTitle === "مشروع جديد") {
+                smartTitle = promptValue.split(' ').slice(0, 2).join(' ');
+            }
 
             localStorage.setItem('nova_preview_code', data.code);
-            localStorage.setItem('nova_preview_title', shortTitle);
+            localStorage.setItem('nova_preview_title', smartTitle);
+            // ----------------------------------------------
 
             if (openNewTabBtn) {
                 openNewTabBtn.classList.remove('hidden');
