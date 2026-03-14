@@ -1,6 +1,7 @@
 let currentGeneratedCode = "";
 let isCooldownActive = false; 
 
+// دالة العد التنازلي المطورة
 function startCooldown(seconds) {
     const btn = document.getElementById('generateBtn');
     const loader = document.getElementById('loader');
@@ -62,7 +63,10 @@ async function generateSite() {
             currentGeneratedCode = data.code; 
             iframe.srcdoc = data.code; 
 
-            // بنشيل الـ LocalStorage هنا لأننا هنستخدم طريقة "الإرسال المباشر" للنافذة
+            // بنخزن الكود في localStorage عشان preview.html يسحبه أول مرة
+            localStorage.setItem('nova_preview_code', data.code);
+            localStorage.setItem('nova_preview_title', "NovaBuilder 🚀");
+
             if (openNewTabBtn) {
                 openNewTabBtn.classList.remove('hidden');
             }
@@ -82,15 +86,18 @@ async function generateSite() {
     }
 }
 
-// --- التعديل السحري هنا ---
+// --- التعديل هنا لضمان استقلالية النوافذ ---
 const openBtn = document.getElementById('openNewTabBtn');
 if (openBtn) {
     openBtn.addEventListener('click', () => {
-        // بدلاً من فتح صفحة preview.html، هنفتح نافذة ونحقن فيها الكود فوراً
-        const newWindow = window.open('', '_blank');
-        newWindow.document.write(currentGeneratedCode);
-        newWindow.document.title = "NovaBuilder Preview 🚀";
-        newWindow.document.close(); // مهم جداً عشان المتصفح يفهم إن الصفحة خلصت
+        // بنفتح النافذة
+        const newWin = window.open('/preview.html', '_blank');
+        
+        // بمجرد ما النافذة تفتح، بنبعتلها الكود الحالي 
+        // عشان تسجله عندها في الـ Session الخاص بيها هي بس
+        newWin.onload = () => {
+            newWin.sessionStorage.setItem('current_page_code', currentGeneratedCode);
+        };
     });
 }
 
