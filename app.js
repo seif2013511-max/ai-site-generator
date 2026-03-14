@@ -50,20 +50,17 @@ async function generateSite() {
 
         const data = await response.json();
 
-        if (response.status === 429 || (data.error && data.error.toLowerCase().includes('quota'))) {
+        // التعديل هنا: بنلقط الـ 429 والـ 500 وأي quota عشان نشغل العداد فوراً
+        if (!response.ok || response.status === 429 || (data.error && data.error.toLowerCase().includes('quota'))) {
             startCooldown(30); 
             return; 
-        }
-
-        if (!response.ok) {
-            throw new Error(data.error || "خطأ في السيرفر");
         }
 
         if (data.code) {
             currentGeneratedCode = data.code; 
             iframe.srcdoc = data.code; 
 
-            // بنخزن الكود في localStorage عشان preview.html يسحبه أول مرة
+            // تخزين الكود للنافذة اللي هتفتح (مهم للمعاينة)
             localStorage.setItem('nova_preview_code', data.code);
             localStorage.setItem('nova_preview_title', "NovaBuilder 🚀");
 
@@ -86,15 +83,13 @@ async function generateSite() {
     }
 }
 
-// --- التعديل هنا لضمان استقلالية النوافذ ---
+// فتح صفحة المعاينة (دعم المشاريع اللانهائية)
 const openBtn = document.getElementById('openNewTabBtn');
 if (openBtn) {
     openBtn.addEventListener('click', () => {
-        // بنفتح النافذة
         const newWin = window.open('/preview.html', '_blank');
         
-        // بمجرد ما النافذة تفتح، بنبعتلها الكود الحالي 
-        // عشان تسجله عندها في الـ Session الخاص بيها هي بس
+        // ده السطر اللي بيخلي كل نافذة مستقلة "بالكود بتاعها"
         newWin.onload = () => {
             newWin.sessionStorage.setItem('current_page_code', currentGeneratedCode);
         };
@@ -102,3 +97,14 @@ if (openBtn) {
 }
 
 document.getElementById('generateBtn').addEventListener('click', generateSite);
+
+// --- فكرة إضافية: لو عايز تضيف زرار تحميل الملف بره ---
+function downloadCode() {
+    if (!currentGeneratedCode) return;
+    const blob = new Blob([currentGeneratedCode], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'NovaBuilder_Site.html';
+    a.click();
+}
