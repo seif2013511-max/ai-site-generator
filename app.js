@@ -1,20 +1,23 @@
 let currentGeneratedCode = "";
+let isCooldownActive = false; // متغير جديد لمنع التداخل
 
-// دالة العد التنازلي الجديدة
+// دالة العد التنازلي المطورة
 function startCooldown(seconds) {
     const btn = document.getElementById('generateBtn');
     const loader = document.getElementById('loader');
     let counter = seconds;
+    isCooldownActive = true;
 
     btn.disabled = true;
-    loader.classList.add('hidden'); // إخفاء اللودر لأننا بنعد تنازلي مش بنولد كود
+    loader.classList.add('hidden');
 
     const interval = setInterval(() => {
-        btn.querySelector('span').innerText = `انتظر ${counter} ثانية للراحة... ⏳`;
+        btn.querySelector('span').innerText = `جوجل مشغولة.. انتظر ${counter} ثانية ⏳`;
         counter--;
 
         if (counter < 0) {
             clearInterval(interval);
+            isCooldownActive = false;
             btn.disabled = false;
             btn.querySelector('span').innerText = "توليد الموقع الآن ✨";
         }
@@ -29,6 +32,8 @@ async function generateSite() {
     const openNewTabBtn = document.getElementById('openNewTabBtn');
     
     const promptValue = promptInput.value;
+
+    if (!promptValue || isCooldownActive) return;
 
     if (!promptValue) {
         alert("من فضلك اكتب وصف للموقع أولاً!");
@@ -51,10 +56,10 @@ async function generateSite() {
 
         const data = await response.json();
 
-        // --- التعديل هنا لاكتشاف زحمة جوجل ---
+        // اكتشاف الزحمة ونفاد المحاولات
         if (response.status === 429 || (data.error && data.error.toLowerCase().includes('quota'))) {
-            startCooldown(15); // هينتظر 15 ثانية لو المحاولات خلصت
-            return; // نوقف الدالة هنا عشان ميروحش للـ finally يفتح الزرار
+            startCooldown(30); // 30 ثانية عشان نضمن إن جوجل هديت
+            return; 
         }
 
         if (!response.ok) {
@@ -77,10 +82,11 @@ async function generateSite() {
 
     } catch (e) {
         console.error("Error details:", e);
-        alert("فيه مشكلة حصلت: " + e.message);
+        // لو الخطأ مش بسبب الزحمة، طلع التنبيه العادي
+        if (!isCooldownActive) alert("فيه مشكلة حصلت: " + e.message);
     } finally {
-        // نرجع الزرار لأصله "فقط" لو مفيش عد تنازلي شغال
-        if (!btn.querySelector('span').innerText.includes('انتظر')) {
+        // ميرجعش يفتح الزرار لو العداد شغال
+        if (!isCooldownActive) {
             btn.disabled = false;
             loader.classList.add('hidden');
             btn.querySelector('span').innerText = "توليد الموقع الآن ✨";
