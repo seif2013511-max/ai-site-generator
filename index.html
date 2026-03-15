@@ -3,17 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NovaBuilder 🚀</title>
+    <title>NovaBuilder 🚀 | NovaCore Studio</title>
     
     <link rel="icon" href="data:,">
 
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
-        body { font-family: 'Tajawal', sans-serif; }
-        .preview-container { min-height: 500px; transition: all 0.3s ease; }
+        
+        body { 
+            font-family: 'Tajawal', sans-serif; 
+        }
+
+        /* تحسين شكل السكرول بار */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        .preview-container { 
+            min-height: 550px; 
+            transition: all 0.3s ease; 
+        }
+
         .nova-bg {
-            background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a, #000000);
+        }
+
+        /* حركات إضافية للخلفية */
+        .glass-effect {
+            background: rgba(31, 41, 55, 0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(75, 85, 99, 0.3);
         }
     </style>
 </head>
@@ -21,47 +52,67 @@
 
     <div class="container mx-auto px-4 py-10">
         <header class="text-center mb-12">
-            <h1 class="text-5xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-500">
+            <h1 class="text-6xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-500 tracking-tight">
                 NovaBuilder 🚀
             </h1>
-            <p class="text-gray-400 text-lg">مستقبلك في بناء المواقع بذكاء خارق</p>
+            <p class="text-gray-400 text-lg font-medium">بواسطة <span class="text-purple-400">NovaCore Studio</span> - مستقبل الويب بين يديك</p>
         </header>
 
-        <div class="max-w-3xl mx-auto bg-gray-800/50 backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-gray-700 mb-10">
+        <div class="max-w-3xl mx-auto glass-effect p-8 rounded-3xl shadow-2xl mb-12 transition-all hover:border-purple-500/50">
             <textarea id="promptInput" 
-                class="w-full bg-gray-900/80 text-white p-4 rounded-xl border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none h-32 mb-4"
-                placeholder="صف الموقع الذي تتخيله... (مثال: متجر عطور فخم باللون الذهبي)"></textarea>
+                class="w-full bg-gray-900/90 text-white p-5 rounded-2xl border border-gray-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none resize-none h-36 mb-6 text-lg transition-all"
+                placeholder="صف الموقع الذي تتخيله... (مثال: صفحة تهنئة بالعيد بألوان نيون وحركات جذابة)"></textarea>
             
             <button id="generateBtn" 
-                class="w-full bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 hover:scale-[1.02] text-white font-bold py-4 rounded-xl transition-all active:scale-95 flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20">
-                <span>ابدأ بناء مشروعك الآن ✨</span>
-                <div id="loader" class="hidden animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                class="w-full bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-500 hover:to-pink-500 text-white font-bold py-5 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-4 shadow-xl shadow-purple-500/20 text-xl">
+                <span id="btnText">ابدأ بناء سحرك الآن ✨</span>
+                <div id="loader" class="hidden animate-spin rounded-full h-6 w-6 border-3 border-white border-t-transparent"></div>
             </button>
         </div>
 
-        <div class="w-full">
-            <h2 class="text-2xl font-bold mb-6 text-blue-400 flex items-center gap-3">
-                <span class="relative flex h-3 w-3">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                </span>
-                منطقة المعاينة المباشرة:
-            </h2>
+        <div class="w-full max-w-6xl mx-auto">
+            <div class="flex items-center justify-between mb-6 px-2">
+                <h2 class="text-2xl font-bold text-blue-400 flex items-center gap-3">
+                    <span class="relative flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                    </span>
+                    المعاينة الحية للمشروع:
+                </h2>
+                <div class="text-sm text-gray-500 font-mono" id="quotaDisplay">Status: Ready</div>
+            </div>
             
-            <div id="previewWrapper" class="bg-white rounded-2xl overflow-hidden shadow-2xl border-4 border-gray-800/50">
-                <iframe id="previewIframe" class="w-full preview-container" srcdoc="<body style='display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;color:#888;background:#f9fafb;'><img src='https://cdn-icons-png.flaticon.com/512/1085/1085493.png' width='100' style='margin-bottom:20px; opacity:0.5'><p>اكتب وصفاً ودع NovaBuilder يبهرك!</p></body>"></iframe>
+            <div id="previewWrapper" class="bg-white rounded-3xl overflow-hidden shadow-2xl border-8 border-gray-800/80 ring-1 ring-purple-500/30">
+                <iframe id="previewIframe" class="w-full preview-container" 
+                    srcdoc="<body style='display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;color:#94a3b8;background:#f8fafc;margin:0;'>
+                    <img src='https://cdn-icons-png.flaticon.com/512/1085/1085493.png' width='80' style='margin-bottom:20px; opacity:0.3; filter: grayscale(1);'>
+                    <p style='font-size:1.2rem; font-weight:bold;'>في انتظار إبداعك يا سيف...</p>
+                    <p style='font-size:0.9rem;'>اكتب وصفاً فوق ودوس على 'ابدأ بناء سحرك'</p>
+                    </body>"></iframe>
             </div>
 
-            <div class="mt-8 flex justify-center">
+            <div class="mt-10 flex flex-wrap justify-center gap-6">
                 <button id="openNewTabBtn" 
-                    class="hidden bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 px-10 rounded-xl transition-all shadow-lg flex items-center gap-3 active:scale-95">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    class="hidden bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold py-4 px-10 rounded-2xl transition-all shadow-lg flex items-center gap-3 active:scale-95 group">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover:rotate-12 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
-                    مشاهدة الموقع في نافذة أخرى 🌐
+                    فتح في نافذة كاملة 🌐
+                </button>
+
+                <button id="downloadBtn" 
+                    class="hidden bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-400 hover:to-rose-500 text-white font-bold py-4 px-10 rounded-2xl transition-all shadow-lg flex items-center gap-3 active:scale-95 group border border-pink-400/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover:bounce transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    تحميل ملف الموقع (HTML) 📥
                 </button>
             </div>
         </div>
+
+        <footer class="mt-20 text-center text-gray-500 text-sm">
+            <p>© 2026 NovaCore Studio. جميع الحقوق محفوظة.</p>
+        </footer>
     </div>
 
     <script src="app.js"></script>
