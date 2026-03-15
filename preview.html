@@ -25,29 +25,38 @@
 
     <script>
         function updateContent() {
-            // سحب الكود المخزن
-            const code = localStorage.getItem('nova_preview_code');
-            // سحب العنوان (اللي ثبتناه في app.js على NovaBuilder)
-            const title = localStorage.getItem('nova_preview_title');
-            
-            if (code) {
-                document.getElementById('output').srcdoc = code;
-            }
-            
-            // تحديث عنوان التاب
-            if (title) {
-                document.title = title;
+            // 1. قراءة الـ ID من رابط الصفحة (URL)
+            const urlParams = new URLSearchParams(window.location.search);
+            const projectId = urlParams.get('id');
+
+            if (projectId) {
+                // 2. سحب الكود الخاص بهذا المشروع فقط
+                const code = localStorage.getItem(projectId);
+                
+                if (code) {
+                    document.getElementById('output').srcdoc = code;
+                    document.title = "NovaBuilder 🚀 - " + projectId;
+                } else {
+                    document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:20%;'>عفواً، الكود غير موجود أو تم مسحه.</h2>";
+                }
             } else {
-                document.title = "NovaBuilder 🚀";
+                // لو الصفحة اتفتحت من غير ID خالص (الطريقة القديمة)
+                const legacyCode = localStorage.getItem('nova_preview_code');
+                if (legacyCode) {
+                    document.getElementById('output').srcdoc = legacyCode;
+                }
             }
         }
 
         // التحديث عند الفتح
         updateContent();
         
-        // التحديث التلقائي في حالة تغيير الكود والصفحة مفتوحة
+        // مراقبة التغييرات (لو عملت توليد جديد لنفس المشروع والصفحة مفتوحة)
         window.addEventListener('storage', (e) => {
-            if (e.key === 'nova_preview_code' || e.key === 'nova_preview_title') {
+            const urlParams = new URLSearchParams(window.location.search);
+            const projectId = urlParams.get('id');
+            
+            if (e.key === projectId) {
                 updateContent();
             }
         });
