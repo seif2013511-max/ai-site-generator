@@ -1,4 +1,4 @@
-// --- 1. توليد معرف فريد لكل جلسة عشان المشاريع متدخلش في بعضها ---
+// --- 1. توليد معرف فريد لكل جلسة ---
 const sessionId = "nova_" + Math.random().toString(36).substr(2, 9);
 let currentGeneratedCode = "";
 
@@ -23,12 +23,31 @@ function updateQuotaCounter() {
     console.log(`📊 الكوتا: ${quotaData.count}/${DAILY_LIMIT}`);
 }
 
+// --- الدالة الجديدة لتحميل الكود كملف HTML ---
+function downloadSite() {
+    if (!currentGeneratedCode) {
+        alert("ولد الموقع الأول يا سيف! 🚀");
+        return;
+    }
+    // إنشاء ملف وهمي في ذاكرة المتصفح
+    const blob = new Blob([currentGeneratedCode], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `NovaCore_Project_${sessionId}.html`; // اسم الملف المحمل
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url); // تنظيف الذاكرة
+}
+
 async function generateSite() {
     const promptInput = document.getElementById('promptInput');
     const btn = document.getElementById('generateBtn');
     const iframe = document.getElementById('previewIframe');
     const loader = document.getElementById('loader');
     const openNewTabBtn = document.getElementById('openNewTabBtn');
+    const downloadBtn = document.getElementById('downloadBtn'); // الزرار الجديد
     const promptValue = promptInput.value;
 
     if (!promptValue) {
@@ -39,7 +58,10 @@ async function generateSite() {
     btn.disabled = true;
     loader.classList.remove('hidden');
     btn.querySelector('span').innerText = "جاري البناء... 🏗️";
+    
+    // إخفاء الأزرار أثناء التحميل الجديد
     if (openNewTabBtn) openNewTabBtn.classList.add('hidden');
+    if (downloadBtn) downloadBtn.classList.add('hidden');
 
     try {
         const response = await fetch('/api/generate', {
@@ -60,12 +82,11 @@ async function generateSite() {
             currentGeneratedCode = data.code; 
             iframe.srcdoc = data.code; 
 
-            // --- 2. التخزين باستخدام المعرف الفريد للجلسة الحالية فقط ---
             localStorage.setItem(sessionId, data.code);
             
-            if (openNewTabBtn) {
-                openNewTabBtn.classList.remove('hidden');
-            }
+            // إظهار الأزرار بعد نجاح التوليد
+            if (openNewTabBtn) openNewTabBtn.classList.remove('hidden');
+            if (downloadBtn) downloadBtn.classList.remove('hidden');
         }
     } catch (e) {
         alert("فيه مشكلة حصلت: " + e.message);
@@ -76,13 +97,18 @@ async function generateSite() {
     }
 }
 
-// --- 3. تعديل زر الفتح عشان يبعت الـ ID في الرابط ---
+// ربط زر الفتح
 const openBtn = document.getElementById('openNewTabBtn');
 if (openBtn) {
     openBtn.addEventListener('click', () => {
-        // بنفتح صفحة المعاينة وبنبعتلها الـ ID بتاع المشروع ده مخصوص
         window.open(`/preview.html?id=${sessionId}`, '_blank');
     });
+}
+
+// ربط زر التحميل الجديد
+const dlBtn = document.getElementById('downloadBtn');
+if (dlBtn) {
+    dlBtn.addEventListener('click', downloadSite);
 }
 
 document.getElementById('generateBtn').addEventListener('click', generateSite);
