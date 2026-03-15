@@ -1,5 +1,39 @@
 let currentGeneratedCode = "";
 
+// --- إعدادات العداد الذكي بناءً على كوتا Gemini 3 Flash ---
+const DAILY_LIMIT = 20; // الحد اليومي بتاعك هو 20 طلب
+const ALERT_THRESHOLD = 0.8; // تنبيه عند 80% (يعني لما يوصل لـ 16 طلب)
+
+function updateQuotaCounter() {
+    const today = new Date().toLocaleDateString();
+    // بنسحب البيانات من localStorage أو بنبدأ من جديد لو مفيش
+    let quotaData = JSON.parse(localStorage.getItem('nova_quota')) || { date: today, count: 0 };
+
+    // لو التاريخ اتغير (يوم جديد)، بنصفر العداد تلقائياً
+    if (quotaData.date !== today) {
+        quotaData = { date: today, count: 0 };
+    }
+
+    quotaData.count++;
+    localStorage.setItem('nova_quota', JSON.stringify(quotaData));
+
+    // حساب الطلبات الفاضلة
+    const remaining = DAILY_LIMIT - quotaData.count;
+
+    // 1. تنبيه الـ 80% (يظهر مرة واحدة عند الطلب رقم 16)
+    if (quotaData.count === Math.floor(DAILY_LIMIT * ALERT_THRESHOLD)) {
+        alert(`⚠️ يا سيف! أنت استهلكت 80% من الكوتا (16/20). فاضل لك 4 طلبات بس النهاردة!`);
+    }
+
+    // 2. تنبيه لو الكوتا خلصت خالص
+    if (quotaData.count >= DAILY_LIMIT) {
+        alert("🚨 الكوتا خلصت يا بطل! استنى لبكرة أو غير الـ API Key.");
+    }
+
+    console.log(`📊 استهلاك الكوتا: ${quotaData.count}/${DAILY_LIMIT} | المتبقي: ${remaining}`);
+}
+// --------------------------------------------------------
+
 async function generateSite() {
     const promptInput = document.getElementById('promptInput');
     const btn = document.getElementById('generateBtn');
@@ -14,7 +48,6 @@ async function generateSite() {
         return;
     }
 
-    // تجهيز الواجهة لبدء التوليد
     btn.disabled = true;
     loader.classList.remove('hidden');
     btn.querySelector('span').innerText = "جاري البناء... 🏗️";
@@ -36,13 +69,13 @@ async function generateSite() {
         const data = await response.json();
         
         if (data.code) {
+            // تحديث العداد فور نجاح الطلب
+            updateQuotaCounter();
+
             currentGeneratedCode = data.code; 
             iframe.srcdoc = data.code; 
 
-            // 1. تخزين الكود في المتصفح ليعمل حتى بعد إعادة التحميل
             localStorage.setItem('nova_preview_code', data.code);
-            
-            // 2. تثبيت عنوان الصفحة على NovaBuilder 🚀 كما طلبت
             localStorage.setItem('nova_preview_title', "NovaBuilder 🚀");
 
             if (openNewTabBtn) {
@@ -62,7 +95,6 @@ async function generateSite() {
     }
 }
 
-// فتح صفحة المعاينة (تأكد من وجود ملف preview.html في مشروعك)
 const openBtn = document.getElementById('openNewTabBtn');
 if (openBtn) {
     openBtn.addEventListener('click', () => {
@@ -70,5 +102,4 @@ if (openBtn) {
     });
 }
 
-// ربط وظيفة التوليد بالزر الأساسي
 document.getElementById('generateBtn').addEventListener('click', generateSite);
