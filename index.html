@@ -15,7 +15,6 @@
         .nova-bg {
             background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
         }
-        /* حركة نبض خفيفة للزرار */
         @keyframes pulse-green {
             0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); }
             70% { box-shadow: 0 0 0 15px rgba(37, 211, 102, 0); }
@@ -24,6 +23,8 @@
         #whatsappBtn {
             animation: pulse-green 2s infinite;
         }
+        /* ستايل لصور المعاينة */
+        #imagePreview { max-height: 100px; object-fit: contain; }
     </style>
 </head>
 <body class="nova-bg text-white min-h-screen">
@@ -39,7 +40,26 @@
         <div class="max-w-3xl mx-auto bg-gray-800/50 backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-gray-700 mb-10">
             <textarea id="promptInput" 
                 class="w-full bg-gray-900/80 text-white p-4 rounded-xl border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none h-32 mb-4"
-                placeholder="صف الموقع الذي تتخيله... (مثال: متجر عطور فخم باللون الذهبي)"></textarea>
+                placeholder="صف الموقع الذي تتخيله... أو ارفع صورة ليحللها الذكاء الاصطناعي!"></textarea>
+            
+            <div class="flex items-center gap-4 mb-4">
+                <input type="file" id="imageInput" accept="image/*" class="hidden">
+                <button onclick="document.getElementById('imageInput').click()" 
+                    class="bg-gray-700 hover:bg-gray-600 text-sm py-2 px-4 rounded-lg flex items-center gap-2 transition-all border border-gray-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    ارفع صورة للتصميم 📷
+                </button>
+                <div id="imagePreviewContainer" class="hidden relative">
+                    <img id="imagePreview" src="" alt="Preview" class="rounded-lg border border-blue-500">
+                    <button id="removeImage" class="absolute -top-2 -right-2 bg-red-500 rounded-full p-1 hover:bg-red-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
             
             <button id="generateBtn" 
                 class="w-full bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 hover:scale-[1.02] text-white font-bold py-4 rounded-xl transition-all active:scale-95 flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20">
@@ -58,7 +78,7 @@
             </h2>
             
             <div id="previewWrapper" class="bg-white rounded-2xl overflow-hidden shadow-2xl border-4 border-gray-800/50">
-                <iframe id="previewIframe" class="w-full preview-container" srcdoc="<body style='display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;color:#888;background:#f9fafb;'><img src='https://cdn-icons-png.flaticon.com/512/1085/1085493.png' width='100' style='margin-bottom:20px; opacity:0.5'><p>يبهرك NovaBuilder اكتب وصفا ودع</p></body>"></iframe>
+                <iframe id="previewIframe" class="w-full preview-container" srcdoc="<body style='display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;color:#888;background:#f9fafb;'><img src='https://cdn-icons-png.flaticon.com/512/1085/1085493.png' width='100' style='margin-bottom:20px; opacity:0.5'><p>اكتب وصفاً أو ارفع صورة ودع NovaBuilder يبهرك</p></body>"></iframe>
             </div>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
