@@ -1,6 +1,6 @@
 // --- 1. متغيرات الجلسة ---
 let currentGeneratedCode = "";
-let selectedImageBase64 = null; // متغير جديد لحفظ الصورة
+let selectedImageBase64 = null; 
 
 const DAILY_LIMIT = 20; 
 const ALERT_THRESHOLD = 0.8; 
@@ -22,7 +22,7 @@ function updateQuotaCounter() {
     }
 }
 
-// --- معالجة الصور (الجديد) ---
+// --- معالجة الصور ---
 const imageInput = document.getElementById('imageInput');
 const imagePreviewContainer = document.getElementById('imagePreviewContainer');
 const imagePreview = document.getElementById('imagePreview');
@@ -34,7 +34,7 @@ if (imageInput) {
         if (file) {
             const reader = new FileReader();
             reader.onload = function(event) {
-                selectedImageBase64 = event.target.result.split(',')[1]; // استخراج الـ Base64 فقط
+                selectedImageBase64 = event.target.result.split(',')[1]; 
                 imagePreview.src = event.target.result;
                 imagePreviewContainer.classList.remove('hidden');
             };
@@ -43,12 +43,15 @@ if (imageInput) {
     });
 }
 
+// دالة لتنظيف الصورة (عشان نستخدمها في كذا مكان)
+function clearImageSelection() {
+    selectedImageBase64 = null;
+    if (imageInput) imageInput.value = "";
+    if (imagePreviewContainer) imagePreviewContainer.classList.add('hidden');
+}
+
 if (removeImageBtn) {
-    removeImageBtn.addEventListener('click', () => {
-        selectedImageBase64 = null;
-        imageInput.value = "";
-        imagePreviewContainer.classList.add('hidden');
-    });
+    removeImageBtn.addEventListener('click', clearImageSelection);
 }
 
 // --- تحميل الملف HTML ---
@@ -97,7 +100,7 @@ async function generateSite() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 prompt: promptValue,
-                image: selectedImageBase64 // بنبعت الصورة هنا لو موجودة
+                image: selectedImageBase64 
             })
         });
 
@@ -123,6 +126,10 @@ async function generateSite() {
                 openNewTabBtn.classList.remove('hidden');
             }
             if (downloadBtn) downloadBtn.classList.remove('hidden');
+
+            // --- التعديل هنا: تصفير المدخلات بعد النجاح ---
+            // promptInput.value = ""; // اختياري لو عايز تمسح الكلام برضه
+            // clearImageSelection(); // اختياري لو عايز تمسح الصورة بعد ما تتبني
         }
     } catch (e) {
         alert("فيه مشكلة حصلت: " + e.message);
