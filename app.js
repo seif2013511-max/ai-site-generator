@@ -1,10 +1,11 @@
 // --- 1. متغيرات الجلسة ---
 let currentGeneratedCode = "";
-// شلنا sessionId القديم من هنا عشان ميبقاش ثابت
+let selectedImageBase64 = null; // متغير جديد لحفظ الصورة
 
 const DAILY_LIMIT = 20; 
 const ALERT_THRESHOLD = 0.8; 
 
+// --- إدارة الكوتا ---
 function updateQuotaCounter() {
     const today = new Date().toLocaleDateString();
     let quotaData = JSON.parse(localStorage.getItem('nova_quota')) || { date: today, count: 0 };
@@ -19,16 +20,43 @@ function updateQuotaCounter() {
     if (quotaData.count === Math.floor(DAILY_LIMIT * ALERT_THRESHOLD)) {
         alert(`⚠️ يا سيف! استهلكت 80% من الكوتا (16/20).`);
     }
-    console.log(`📊 الكوتا: ${quotaData.count}/${DAILY_LIMIT}`);
 }
 
-// --- الدالة المحسنة لتحميل الكود كملف HTML ---
+// --- معالجة الصور (الجديد) ---
+const imageInput = document.getElementById('imageInput');
+const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+const imagePreview = document.getElementById('imagePreview');
+const removeImageBtn = document.getElementById('removeImage');
+
+if (imageInput) {
+    imageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                selectedImageBase64 = event.target.result.split(',')[1]; // استخراج الـ Base64 فقط
+                imagePreview.src = event.target.result;
+                imagePreviewContainer.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+if (removeImageBtn) {
+    removeImageBtn.addEventListener('click', () => {
+        selectedImageBase64 = null;
+        imageInput.value = "";
+        imagePreviewContainer.classList.add('hidden');
+    });
+}
+
+// --- تحميل الملف HTML ---
 function downloadSite() {
     if (!currentGeneratedCode) {
         alert("ولد الموقع الأول يا سيف! 🚀");
         return;
     }
-    // توليد اسم ملف فريد وقت التحميل
     const fileId = Math.random().toString(36).substr(2, 5);
     const blob = new Blob([currentGeneratedCode], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
@@ -41,6 +69,7 @@ function downloadSite() {
     URL.revokeObjectURL(url);
 }
 
+// --- الدالة الأساسية للتوليد ---
 async function generateSite() {
     const promptInput = document.getElementById('promptInput');
     const btn = document.getElementById('generateBtn');
@@ -50,14 +79,14 @@ async function generateSite() {
     const downloadBtn = document.getElementById('downloadBtn'); 
     const promptValue = promptInput.value;
 
-    if (!promptValue) {
-        alert("من فضلك اكتب وصف للموقع أولاً!");
+    if (!promptValue && !selectedImageBase64) {
+        alert("اكتب وصف أو ارفع صورة يا سيف عشان نبدأ!");
         return;
     }
 
     btn.disabled = true;
     loader.classList.remove('hidden');
-    btn.querySelector('span').innerText = "جاري البناء... 🏗️";
+    btn.querySelector('span').innerText = "جاري التحليل والبناء... 🏗️";
     
     if (openNewTabBtn) openNewTabBtn.classList.add('hidden');
     if (downloadBtn) downloadBtn.classList.add('hidden');
@@ -66,7 +95,10 @@ async function generateSite() {
         const response = await fetch('/api/generate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: promptValue })
+            body: JSON.stringify({ 
+                prompt: promptValue,
+                image: selectedImageBase64 // بنبعت الصورة هنا لو موجودة
+            })
         });
 
         if (!response.ok) {
@@ -78,25 +110,18 @@ async function generateSite() {
         
         if (data.code) {
             updateQuotaCounter();
-            
-            // --- التعديل الجوهري هنا يا سيف ---
-            // توليد ID جديد "خاص بهذا الموقع فقط"
             const newSiteId = "nova_" + Math.random().toString(36).substr(2, 9);
-            
             currentGeneratedCode = data.code; 
             iframe.srcdoc = data.code; 
 
-            // حفظ الكود بالـ ID الجديد عشان الرابط يفتح تصميم مختلف
             localStorage.setItem(newSiteId, data.code);
             
-            // تحديث زرار "الفتح في نافذة جديدة" بالـ ID الجديد
             if (openNewTabBtn) {
                 openNewTabBtn.onclick = () => {
                     window.open(`/preview.html?id=${newSiteId}`, '_blank');
                 };
                 openNewTabBtn.classList.remove('hidden');
             }
-            
             if (downloadBtn) downloadBtn.classList.remove('hidden');
         }
     } catch (e) {
@@ -108,10 +133,8 @@ async function generateSite() {
     }
 }
 
-// ربط زر التحميل
+// ربط الأزرار
 const dlBtn = document.getElementById('downloadBtn');
-if (dlBtn) {
-    dlBtn.addEventListener('click', downloadSite);
-}
+if (dlBtn) dlBtn.addEventListener('click', downloadSite);
 
 document.getElementById('generateBtn').addEventListener('click', generateSite);
