@@ -10,21 +10,23 @@ module.exports = async (req, res) => {
     }
 
     try {
+        // بنستلم النص والصورة
         const { prompt, image } = req.body;
         const API_KEY = process.env.API_KEY;
 
         if (!API_KEY) {
-            return res.status(500).json({ error: "API Key is missing" });
+            return res.status(500).json({ error: "API Key is missing in Vercel settings" });
         }
 
-        // رجعنا للموديل اللي كان شغال معاك في الـ AI Studio بس ضفنا دعم الصور
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/Gemini 3 Flash-latest:generateContent?key=${API_KEY}`;
+        // رجعتلك الرابط اللي كان شغال معاك بالظبط gemini-3-flash-preview
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${API_KEY}`;
         
+        // تجهيز الأجزاء (Parts)
         let parts = [{ 
             text: `صمم صفحة ويب كاملة واحترافية باستخدام HTML و Tailwind CSS بناءً على الوصف التالي: ${prompt || 'صمم موقع احترافي'}. أخرج الكود فقط بدون أي نصوص أخرى أو علامات markdown.` 
         }];
 
-        // إضافة الصورة لو وجدت
+        // لو فيه صورة مبعوثة من app.js بنضيفها هنا
         if (image) {
             parts.push({
                 inlineData: {
@@ -45,13 +47,14 @@ module.exports = async (req, res) => {
             code = code.replace(/```html|```/g, "").trim();
             res.status(200).json({ code: code });
         } else {
-            throw new Error("جوجل لم ترسل كوداً.");
+            throw new Error("جوجل لم ترسل كوداً، حاول تغيير الوصف.");
         }
 
     } catch (err) {
         const statusCode = err.response?.status || 500;
         const msg = err.response?.data?.error?.message || err.message;
-        console.error(`Error:`, msg);
+        
+        console.error(`Gemini 3 Error (${statusCode}):`, msg);
         res.status(statusCode).json({ error: msg });
     }
 };
