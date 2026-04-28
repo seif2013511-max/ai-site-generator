@@ -18,7 +18,7 @@ module.exports = async (req, res) => {
         }
 
         // رجعنا للموديل اللي كان شغال معاك في الـ AI Studio بس ضفنا دعم الصور
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/Gemini 3 Flash-latest:generateContent?key=${API_KEY}`;
         
         let parts = [{ 
             text: `صمم صفحة ويب كاملة واحترافية باستخدام HTML و Tailwind CSS بناءً على الوصف التالي: ${prompt || 'صمم موقع احترافي'}. أخرج الكود فقط بدون أي نصوص أخرى أو علامات markdown.` 
